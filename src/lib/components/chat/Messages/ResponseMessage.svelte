@@ -200,18 +200,21 @@
 
 	let showRateComment = false;
 
-	// Invertix: persist downloadables across re-renders.
+	// Invertix: persist downloadables across re-renders AND page reloads.
 	// OpenWebUI clears message.content when done=true, so we capture URLs during
-	// streaming and never reset once found (keyed per message id).
+	// streaming and write them to localStorage keyed by message id.
 	let _downloadables: { name: string; url: string }[] = [];
 	let _downloadablesForId: string = '';
 
+	const _dlKey = (id: string) => `inv_dl_${id}`;
+
 	$: {
 		const mid = (message as any)?.id ?? '';
-		// Reset only when a genuinely new message arrives.
 		if (mid !== _downloadablesForId) {
-			_downloadables = [];
 			_downloadablesForId = mid;
+			// Restore from localStorage on mount / message change.
+			const stored = mid ? localStorage.getItem(_dlKey(mid)) : null;
+			_downloadables = stored ? JSON.parse(stored) : [];
 		}
 		const content = message?.content ?? '';
 		const items: { name: string; url: string }[] = [];
@@ -223,7 +226,10 @@
 		for (const f of (message as any)?.files ?? []) {
 			if (f?.type === 'image' && f?.url) items.push({ name: 'chart.png', url: f.url });
 		}
-		if (items.length > 0) _downloadables = items;
+		if (items.length > 0) {
+			_downloadables = items;
+			if (mid) localStorage.setItem(_dlKey(mid), JSON.stringify(items));
+		}
 	}
 
 	$: downloadables = _downloadables;
@@ -252,6 +258,24 @@
 		}
 	};
 
+	// Post a behavioural feedback signal to the Langfuse trace for this message.
+	// Best-effort: silently swallows errors so UI is never blocked.
+	const sendFeedback = (signal: string, value: number, comment?: string) => {
+		const msgId = (message as any)?.id ?? '';
+		const runId = msgId ? localStorage.getItem(`inv_rid_${msgId}`) : null;
+		if (!runId) return;
+		const body: Record<string, unknown> = { run_id: runId, signal, value };
+		if (comment) body.comment = comment;
+		fetch('/v1/feedback', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${localStorage.token}`
+			},
+			body: JSON.stringify(body)
+		}).catch(() => {});
+	};
+
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
 
@@ -262,6 +286,7 @@
 		const res = await _copyToClipboard(text, null, $settings?.copyFormatted ?? false);
 		if (res) {
 			toast.success($i18n.t('Copying to clipboard was successful!'));
+			sendFeedback('copy_to_clipboard', 1);
 		}
 	};
 
@@ -498,6 +523,9 @@
 	const feedbackHandler = async (rating: number | null = null, details: object | null = null) => {
 		feedbackLoading = true;
 		console.log('Feedback', rating, details);
+		if (rating === 1 || rating === -1) {
+			sendFeedback('user_feedback', rating);
+		}
 
 		const updatedMessage = {
 			...message,
@@ -1098,6 +1126,7 @@
 												: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
 											on:click={() => {
 												downloadables.forEach((d) => downloadFile(d.url, d.name));
+												sendFeedback('download_artifact', 1);
 											}}
 										>
 											<svg
@@ -1250,6 +1279,7 @@
 												class="hidden regenerate-response-button"
 												on:click={() => {
 													showRateComment = false;
+													sendFeedback('regenerate', 1);
 													regenerateResponse(message);
 
 													(model?.actions ?? []).forEach((action) => {
@@ -1269,6 +1299,7 @@
 											<RegenerateMenu
 												onRegenerate={(prompt = null) => {
 													showRateComment = false;
+													sendFeedback('regenerate', 1);
 													regenerateResponse(message, prompt);
 
 													(model?.actions ?? []).forEach((action) => {
@@ -1319,6 +1350,7 @@
 														: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition regenerate-response-button"
 													on:click={() => {
 														showRateComment = false;
+														sendFeedback('regenerate', 1);
 														regenerateResponse(message);
 
 														(model?.actions ?? []).forEach((action) => {

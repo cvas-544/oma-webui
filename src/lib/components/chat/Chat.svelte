@@ -682,6 +682,11 @@
 				} else if (type === 'invertix:ask_options') {
 					// Structured grouped option picker emitted by the Invertix stream filter.
 					pendingAskGroups = data.groups ?? [];
+				} else if (type === 'invertix:run_meta') {
+					// Store run_id per message so feedback signals can POST to /v1/feedback.
+					if (data?.run_id && message?.id) {
+						localStorage.setItem(`inv_rid_${message.id}`, data.run_id);
+					}
 				} else if (type === 'chat:outlet') {
 					// Outlet filter ran on backend — sync in-memory state
 					const outletMessages = data.messages ?? [];
