@@ -264,9 +264,13 @@
 		const msgId = (message as any)?.id ?? '';
 		const runId = msgId ? localStorage.getItem(`inv_rid_${msgId}`) : null;
 		if (!runId) return;
+		// VITE_INVERTIX_BACKEND must point to the FastAPI backend (e.g. Railway URL).
+		// Relative path won't work because OpenWebUI's proxy doesn't forward /v1/feedback.
+		const backendBase = import.meta.env.VITE_INVERTIX_BACKEND;
+		if (!backendBase) return;
 		const body: Record<string, unknown> = { run_id: runId, signal, value };
 		if (comment) body.comment = comment;
-		fetch('/v1/feedback', {
+		fetch(`${backendBase}/v1/feedback`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
