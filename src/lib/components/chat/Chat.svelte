@@ -116,6 +116,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import Image from '../common/Image.svelte';
+	import InvertixQuickDetails from './InvertixQuickDetails.svelte';
 
 	export let chatIdProp = '';
 
@@ -210,6 +211,10 @@
 
 	let generating = false;
 	let dragged = false;
+
+	// Invertix: pending grouped option picker — set by invertix:ask_options event,
+	// cleared when the user submits any message.
+	let pendingAskGroups: { question: string; options: string[] }[] = [];
 	let generationController = null;
 	let contextCompactionToastId = null;
 
@@ -674,6 +679,9 @@
 					if (autoScroll) {
 						scrollToBottom('smooth');
 					}
+				} else if (type === 'invertix:ask_options') {
+					// Structured grouped option picker emitted by the Invertix stream filter.
+					pendingAskGroups = data.groups ?? [];
 				} else if (type === 'chat:outlet') {
 					// Outlet filter ran on backend — sync in-memory state
 					const outletMessages = data.messages ?? [];
@@ -2074,6 +2082,9 @@
 	//////////////////////////
 
 	const submitPrompt = async (inputContent, inputFiles) => {
+		// Clear the Invertix option picker whenever the user submits anything.
+		pendingAskGroups = [];
+
 		const _files = structuredClone(inputFiles);
 
 		chatFiles.push(
@@ -3286,6 +3297,19 @@
 								</div>
 							{:else}
 								<div class=" pb-2 {dragged ? 'z-0' : 'z-10'}">
+									{#if pendingAskGroups.length > 0}
+										<InvertixQuickDetails
+											groups={pendingAskGroups}
+											onSubmit={async (text) => {
+												pendingAskGroups = [];
+												await submitPrompt(text, []);
+											}}
+											onDismiss={() => {
+												pendingAskGroups = [];
+											}}
+										/>
+									{/if}
+
 									<MessageInput
 										bind:this={messageInput}
 										{history}
