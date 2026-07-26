@@ -4,6 +4,13 @@ import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+	server: {
+		proxy: {
+			'/api': { target: 'http://localhost:3000', changeOrigin: true },
+			'/ws': { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
+			'/oauth': { target: 'http://localhost:3000', changeOrigin: true }
+		}
+	},
 	plugins: [
 		sveltekit(),
 		viteStaticCopy({
