@@ -614,7 +614,7 @@
 		await tick();
 
 		if (!details) {
-			showRateComment = true;
+			// showRateComment = true; // Invertix: disabled — we use silent Langfuse signals instead
 
 			if (!updatedMessage.annotation?.tags && (message?.content ?? '') !== '') {
 				// attempt to generate tags
