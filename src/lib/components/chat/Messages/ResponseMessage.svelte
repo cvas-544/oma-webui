@@ -200,6 +200,58 @@
 
 	let showRateComment = false;
 
+	// Invertix: persist downloadables across re-renders.
+	// OpenWebUI clears message.content when done=true, so we capture URLs during
+	// streaming and never reset once found (keyed per message id).
+	let _downloadables: { name: string; url: string }[] = [];
+	let _downloadablesForId: string = '';
+
+	$: {
+		const mid = (message as any)?.id ?? '';
+		// Reset only when a genuinely new message arrives.
+		if (mid !== _downloadablesForId) {
+			_downloadables = [];
+			_downloadablesForId = mid;
+		}
+		const content = message?.content ?? '';
+		const items: { name: string; url: string }[] = [];
+		const docRe = /\[Download ([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+		let m: RegExpExecArray | null;
+		while ((m = docRe.exec(content)) !== null) items.push({ name: m[1], url: m[2] });
+		const chartRe = /!\[[^\]]*\]\((https?:\/\/[^)]+)\)/g;
+		while ((m = chartRe.exec(content)) !== null) items.push({ name: 'chart.png', url: m[1] });
+		for (const f of (message as any)?.files ?? []) {
+			if (f?.type === 'image' && f?.url) items.push({ name: 'chart.png', url: f.url });
+		}
+		if (items.length > 0) _downloadables = items;
+	}
+
+	$: downloadables = _downloadables;
+
+	// Fetch-as-blob so cross-origin URLs actually download instead of opening in-tab.
+	const downloadFile = async (url: string, name: string) => {
+		try {
+			const res = await fetch(url);
+			const blob = await res.blob();
+			const blobUrl = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = blobUrl;
+			a.download = name;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(blobUrl);
+		} catch {
+			// CORS fallback: anchor click — server sends attachment disposition so browser downloads
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = name;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		}
+	};
+
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
 
@@ -1009,38 +1061,6 @@
 							{/if}
 
 							{#if message.done}
-								{#if !readOnly}
-									{#if $user?.role === 'user' ? ($user?.permissions?.chat?.edit ?? true) : true}
-										<Tooltip content={$i18n.t('Edit')} placement="bottom">
-											<button
-												aria-label={$i18n.t('Edit')}
-												class="{isLastMessage || ($settings?.highContrastMode ?? false)
-													? 'visible'
-													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-												on:click={() => {
-													editMessageHandler();
-												}}
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke-width="2.3"
-													aria-hidden="true"
-													stroke="currentColor"
-													class="w-4 h-4"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-													/>
-												</svg>
-											</button>
-										</Tooltip>
-									{/if}
-								{/if}
-
 								<Tooltip content={$i18n.t('Copy')} placement="bottom">
 									<button
 										aria-label={$i18n.t('Copy')}
@@ -1069,90 +1089,32 @@
 									</button>
 								</Tooltip>
 
-								{#if !readOnly && ($user?.role === 'admin' || ($user?.permissions?.chat?.tts ?? true))}
-									<Tooltip content={$i18n.t('Read Aloud')} placement="bottom">
+								{#if downloadables.length > 0}
+									<Tooltip content={$i18n.t('Download')} placement="bottom">
 										<button
-											aria-label={$i18n.t('Read Aloud')}
-											id="speak-button-{message.id}"
+											aria-label={$i18n.t('Download')}
 											class="{isLastMessage || ($settings?.highContrastMode ?? false)
 												? 'visible'
 												: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
 											on:click={() => {
-												if (!loadingSpeech) {
-													if (speaking) {
-														stopAudio();
-													} else {
-														speak();
-													}
-												}
+												downloadables.forEach((d) => downloadFile(d.url, d.name));
 											}}
 										>
-											{#if loadingSpeech}
-												<svg
-													class=" w-4 h-4"
-													fill="currentColor"
-													viewBox="0 0 24 24"
-													aria-hidden="true"
-													xmlns="http://www.w3.org/2000/svg"
-												>
-													<style>
-														.spinner_S1WN {
-															animation: spinner_MGfb 0.8s linear infinite;
-															animation-delay: -0.8s;
-														}
-
-														.spinner_Km9P {
-															animation-delay: -0.65s;
-														}
-
-														.spinner_JApP {
-															animation-delay: -0.5s;
-														}
-
-														@keyframes spinner_MGfb {
-															93.75%,
-															100% {
-																opacity: 0.2;
-															}
-														}
-													</style>
-													<circle class="spinner_S1WN" cx="4" cy="12" r="3" />
-													<circle class="spinner_S1WN spinner_Km9P" cx="12" cy="12" r="3" />
-													<circle class="spinner_S1WN spinner_JApP" cx="20" cy="12" r="3" />
-												</svg>
-											{:else if speaking}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													aria-hidden="true"
-													stroke-width="2.3"
-													stroke="currentColor"
-													class="w-4 h-4"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M17.25 9.75 19.5 12m0 0 2.25 2.25M19.5 12l2.25-2.25M19.5 12l-2.25 2.25m-10.5-6 4.72-4.72a.75.75 0 0 1 1.28.53v15.88a.75.75 0 0 1-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.009 9.009 0 0 1 2.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75Z"
-													/>
-												</svg>
-											{:else}
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													aria-hidden="true"
-													stroke-width="2.3"
-													stroke="currentColor"
-													class="w-4 h-4"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"
-													/>
-												</svg>
-											{/if}
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke-width="2.3"
+												aria-hidden="true"
+												stroke="currentColor"
+												class="w-4 h-4"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+												/>
+											</svg>
 										</button>
 									</Tooltip>
 								{/if}
@@ -1280,42 +1242,6 @@
 										</Tooltip>
 									{/if}
 
-									{#if isLastMessage && ($user?.role === 'admin' || ($user?.permissions?.chat?.continue_response ?? true))}
-										<Tooltip content={$i18n.t('Continue Response')} placement="bottom">
-											<button
-												aria-label={$i18n.t('Continue Response')}
-												type="button"
-												id="continue-response-button"
-												class="{isLastMessage || ($settings?.highContrastMode ?? false)
-													? 'visible'
-													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-												on:click={() => {
-													continueResponse();
-												}}
-											>
-												<svg
-													aria-hidden="true"
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke-width="2.3"
-													stroke="currentColor"
-													class="w-4 h-4"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-													/>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z"
-													/>
-												</svg>
-											</button>
-										</Tooltip>
-									{/if}
 
 									{#if $user?.role === 'admin' || ($user?.permissions?.chat?.regenerate_response ?? true)}
 										{#if $settings?.regenerateMenu ?? true}
