@@ -1,7 +1,7 @@
 import { browser, dev } from '$app/environment';
 // import { version } from '../../package.json';
 
-export const APP_NAME = 'Open WebUI';
+export const APP_NAME = 'O&M Agent';
 
 export const WEBUI_HOSTNAME = browser ? `` : '';
 export const WEBUI_BASE_URL = browser ? `` : ``;
