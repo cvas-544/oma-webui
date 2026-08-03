@@ -45,6 +45,7 @@
 	import Image from '$lib/components/common/Image.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import RateComment from './RateComment.svelte';
+	import { emojiPopup } from '$lib/stores/emojiPopup';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import WebSearchResults from './ResponseMessage/WebSearchResults.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
@@ -65,6 +66,8 @@
 	import FullHeightIframe from '$lib/components/common/FullHeightIframe.svelte';
 	import OutputEditView from './OutputEditView.svelte';
 	import { getOutputText, replaceOutputMessageText, type OutputItem } from './structuredOutput';
+	import InvertixDocCard from '../InvertixDocCard.svelte';
+	import InvertixStepsCard from '../InvertixStepsCard.svelte';
 
 	interface MessageType {
 		id: string;
@@ -264,9 +267,10 @@
 		const msgId = (message as any)?.id ?? '';
 		const runId = msgId ? localStorage.getItem(`inv_rid_${msgId}`) : null;
 		if (!runId) return;
-		// VITE_INVERTIX_BACKEND must point to the FastAPI backend (e.g. Railway URL).
-		// Relative path won't work because OpenWebUI's proxy doesn't forward /v1/feedback.
-		const backendBase = import.meta.env.VITE_INVERTIX_BACKEND;
+		// Use the per-message backend URL stored at run time (routes to the correct
+		// company backend). Falls back to VITE_INVERTIX_BACKEND for old messages.
+		const storedBackend = msgId ? localStorage.getItem(`inv_backend_${msgId}`) : null;
+		const backendBase = storedBackend || import.meta.env.VITE_INVERTIX_BACKEND;
 		if (!backendBase) return;
 		const body: Record<string, unknown> = { run_id: runId, signal, value };
 		if (comment) body.comment = comment;
@@ -739,9 +743,12 @@
 		style="scroll-margin-top: 3rem;"
 	>
 		<div class={`shrink-0 ltr:mr-3 rtl:ml-3 hidden @lg:flex mt-1 `}>
-			<ProfileImage
-				src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-				className={'size-8 assistant-message-profile-image'}
+			<img
+				aria-hidden="true"
+				src="/enerparc-logo.png"
+				alt="O&M Agent"
+				draggable="false"
+				class="size-8 assistant-message-profile-image object-contain bg-white rounded-full p-1"
 			/>
 		</div>
 
@@ -889,7 +896,7 @@
 
 										<button
 											id="confirm-edit-message-button"
-											class="px-3.5 py-1.5 bg-gray-900 dark:bg-white hover:bg-gray-850 text-gray-100 dark:text-gray-800 transition rounded-3xl"
+											class="px-3.5 py-1.5 bg-[#003877] dark:bg-white hover:bg-[#002a63] text-gray-100 dark:text-gray-800 transition rounded-3xl"
 											on:click={() => {
 												editMessageConfirmHandler();
 											}}
@@ -901,14 +908,16 @@
 							</div>
 						{/if}
 
+						{#if message.invertixSteps?.length > 0}
+							<InvertixStepsCard steps={message.invertixSteps} streaming={!message.done} responding={!message.done && hasResponseContent} />
+						{/if}
+
 						<div
 							bind:this={contentContainerElement}
 							class="w-full flex flex-col relative {edit ? 'hidden' : ''}"
 							id="response-content-container"
 						>
-							{#if !hasResponseContent && !message.done && !message.error && !hasVisibleStatus}
-								<Skeleton />
-							{:else if hasResponseContent && message.error !== true}
+							{#if hasResponseContent && message.error !== true}
 								<!-- always show message contents even if there's an error -->
 								<!-- unless message.error === true which is legacy error handling, where the error message is stored in message.content -->
 								<ContentRenderer
@@ -988,6 +997,11 @@
 						</div>
 					</div>
 				</div>
+
+
+				{#if message.invertixDocs?.length > 0}
+					<InvertixDocCard docs={message.invertixDocs} onDismissAll={() => {}} />
+				{/if}
 
 				{#if !edit}
 					<div
@@ -1211,6 +1225,12 @@
 												disabled={feedbackLoading}
 												on:click={async () => {
 													await feedbackHandler(1);
+													emojiPopup.open(async ({ rating, feedback }) => {
+														const vals: Record<string, number> = { 'very-sad': 1, sad: 2, neutral: 3, happy: 4 };
+														sendFeedback('user_feedback_detail', vals[rating] ?? 0, feedback || undefined);
+														if (feedback.trim()) await feedbackHandler(null, { comment: feedback, reason: rating });
+														emojiPopup.close();
+													});
 													window.setTimeout(() => {
 														document
 															.getElementById(`message-feedback-${message.id}`)
@@ -1249,6 +1269,12 @@
 												disabled={feedbackLoading}
 												on:click={async () => {
 													await feedbackHandler(-1);
+													emojiPopup.open(async ({ rating, feedback }) => {
+														const vals: Record<string, number> = { 'very-sad': 1, sad: 2, neutral: 3, happy: 4 };
+														sendFeedback('user_feedback_detail', vals[rating] ?? 0, feedback || undefined);
+														if (feedback.trim()) await feedbackHandler(null, { comment: feedback, reason: rating });
+														emojiPopup.close();
+													});
 													window.setTimeout(() => {
 														document
 															.getElementById(`message-feedback-${message.id}`)

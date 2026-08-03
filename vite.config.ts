@@ -8,7 +8,12 @@ export default defineConfig({
 		proxy: {
 			'/api': { target: 'http://localhost:3000', changeOrigin: true },
 			'/ws': { target: 'ws://localhost:3000', ws: true, changeOrigin: true },
-			'/oauth': { target: 'http://localhost:3000', changeOrigin: true }
+			'/oauth': { target: 'http://localhost:3000', changeOrigin: true },
+			'/openai': { target: 'http://localhost:3000', changeOrigin: true },
+			'/ollama': { target: 'http://localhost:3000', changeOrigin: true },
+			'/images': { target: 'http://localhost:3000', changeOrigin: true },
+			'/audio': { target: 'http://localhost:3000', changeOrigin: true },
+			'/rag': { target: 'http://localhost:3000', changeOrigin: true }
 		}
 	},
 	plugins: [

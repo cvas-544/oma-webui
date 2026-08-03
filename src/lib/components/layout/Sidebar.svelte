@@ -83,6 +83,8 @@
 	import Code from '../icons/Code.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
+	import ArtifactsPanel from './Sidebar/ArtifactsPanel.svelte';
+	import { artifacts } from '$lib/stores/artifacts';
 
 	const BREAKPOINT = 768;
 	const DEFAULT_PINNED_ITEMS = ['notes', 'workspace'];
@@ -105,6 +107,7 @@
 
 	let showPinnedModels = false;
 	let showPinnedNotes = false;
+	let showArtifacts = false;
 	let showChannels = false;
 	let showFolders = false;
 	let showSharedFolders = false;
@@ -1047,29 +1050,19 @@
 				: 'invisible'}"
 		>
 			<div
-				class="sidebar px-[0.5625rem] pt-2 pb-1.5 flex justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-3"
+				class="sidebar px-[0.5625rem] pt-2 pb-1.5 flex items-center justify-between space-x-1 text-gray-600 dark:text-gray-400 sticky top-0 z-10 -mb-3"
 			>
 				<a
-					class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition no-drag-region"
+					class="flex items-center px-2 py-1 hover:opacity-80 transition no-drag-region"
 					href="/"
 					draggable="false"
 					on:click={newChatHandler}
 				>
 					<img
-						crossorigin="anonymous"
-						src="{WEBUI_BASE_URL}/static/favicon.png"
-						class="sidebar-new-chat-icon size-6 rounded-full"
-						alt=""
+						src="/enerparc-full-logo.png"
+						class="h-[26px] w-auto object-contain"
+						alt="Enerparc"
 					/>
-				</a>
-
-				<a href="/" class="flex flex-1 px-0.5" on:click={newChatHandler}>
-					<div
-						id="sidebar-webui-name"
-						class=" self-center font-medium text-gray-850 dark:text-white font-primary"
-					>
-						{$WEBUI_NAME}
-					</div>
 				</a>
 				<Tooltip
 					content={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
@@ -1599,6 +1592,77 @@
 							{/if}
 						</div>
 					</div>
+				</Folder>
+
+				<Folder
+					id="sidebar-artifacts"
+					bind:open={showArtifacts}
+					className="px-2 mt-0.5"
+					name="Artifacts"
+					chevron={false}
+					dragAndDrop={false}
+				>
+					{#if $artifacts.length === 0}
+						<div class="flex flex-col items-center justify-center py-6 text-gray-400 dark:text-gray-600 text-xs gap-1.5">
+							<svg xmlns="http://www.w3.org/2000/svg" class="size-6 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+							</svg>
+							<span>No artifacts yet</span>
+						</div>
+					{:else}
+						{#each $artifacts as item (item.id)}
+							<div class="group flex items-center gap-2 rounded-xl px-2.5 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-850 transition w-full">
+								<div class="shrink-0">
+									{#if item.type === 'image'}
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 text-[#73B2F2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+										</svg>
+									{:else if item.ext === 'pdf'}
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 text-[#003877]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+										</svg>
+									{:else}
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5 text-[#65B5E2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+										</svg>
+									{/if}
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="text-xs text-gray-700 dark:text-gray-200 truncate">{item.name}</p>
+									<p class="text-[10px] text-gray-400 dark:text-gray-500">{new Date(item.ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</p>
+								</div>
+								<div class="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0">
+									<button
+										class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition"
+										title="Download"
+										on:click={async () => {
+											if (item.type === 'image') {
+												const { loadImageBlob } = await import('$lib/stores/artifacts');
+												const dataUrl = await loadImageBlob(item.id);
+												if (!dataUrl) { toast.error('Image no longer available'); return; }
+												const a = document.createElement('a'); a.href = dataUrl; a.download = item.name; a.click();
+											} else {
+												const a = document.createElement('a'); a.href = item.url ?? ''; a.download = item.name; a.target = '_blank'; a.click();
+											}
+										}}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+										</svg>
+									</button>
+									<button
+										class="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-500 transition"
+										title="Delete"
+										on:click={() => artifacts.remove(item.id)}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+										</svg>
+									</button>
+								</div>
+							</div>
+						{/each}
+					{/if}
 				</Folder>
 			</div>
 

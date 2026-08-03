@@ -27,6 +27,7 @@
 	import Knowledge from './InputMenu/Knowledge.svelte';
 	import AttachWebpageModal from './AttachWebpageModal.svelte';
 	import GlobeAlt from '$lib/components/icons/GlobeAlt.svelte';
+	import { artifacts } from '$lib/stores/artifacts';
 
 	const i18n = getContext('i18n');
 
@@ -44,6 +45,7 @@
 
 	export let onUpload: Function;
 	export let onClose: Function;
+	export let onInjectText: Function = () => {};
 
 	let show = false;
 	let tab = '';
@@ -89,6 +91,26 @@
 
 		show = false;
 	};
+
+	function extractDocId(url: string | undefined): string {
+		if (!url) return '';
+		const m = url.match(/doc_[a-f0-9]+/);
+		return m ? m[0] : url;
+	}
+
+	function artifactDate(ts: number): string {
+		return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+	}
+
+	function handleAttachArtifact(item: import('$lib/stores/artifacts').ArtifactItem) {
+		if (item.type === 'document') {
+			const docId = extractDocId(item.url);
+			onInjectText(`[Attached: ${item.name} — document_id: ${docId}]`);
+		} else {
+			onInjectText(`[Referring to chart: ${item.name}]`);
+		}
+		show = false;
+	}
 </script>
 
 <AttachWebpageModal
@@ -332,6 +354,24 @@
 						</button>
 					</Tooltip>
 
+					<button
+						class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl"
+						on:click={() => {
+							tab = 'artifacts';
+						}}
+					>
+						<svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+						</svg>
+						<div class="flex items-center w-full justify-between">
+							<div class="line-clamp-1">Attach Artifacts</div>
+							{#if $artifacts.length > 0}
+								<span class="text-[10px] font-medium bg-[#003877] text-white rounded-full px-1.5 py-0.5 mr-1">{$artifacts.length}</span>
+							{/if}
+							<div class="text-gray-500"><ChevronRight /></div>
+						</div>
+					</button>
+
 					{#if fileUploadEnabled}
 						{#if $config?.features?.enable_google_drive_integration}
 							<button
@@ -555,6 +595,49 @@
 					</button>
 
 					<Chats {onSelect} />
+				</div>
+			{:else if tab === 'artifacts'}
+				<div in:fly={{ x: 20, duration: 150 }}>
+					<button
+						class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
+						on:click={() => { tab = ''; }}
+					>
+						<ChevronLeft />
+						<div class="flex items-center w-full justify-between">
+							<div>Artifacts</div>
+						</div>
+					</button>
+
+					{#if $artifacts.length === 0}
+						<div class="px-3 py-6 text-xs text-gray-400 dark:text-gray-600 text-center">
+							No artifacts yet — generate a report or chart first.
+						</div>
+					{:else}
+						{#each $artifacts as item (item.id)}
+							<button
+								class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl text-left"
+								on:click={() => handleAttachArtifact(item)}
+							>
+								{#if item.type === 'image'}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0 text-[#73B2F2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+									</svg>
+								{:else if item.ext === 'pdf'}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0 text-[#003877]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+								{:else}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-4 shrink-0 text-[#65B5E2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
+								{/if}
+								<div class="flex-1 min-w-0">
+									<p class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{item.name}</p>
+									<p class="text-[10px] text-gray-400">{artifactDate(item.ts)}</p>
+								</div>
+							</button>
+						{/each}
+					{/if}
 				</div>
 			{:else if tab === 'microsoft_onedrive'}
 				<div in:fly={{ x: 20, duration: 150 }}>

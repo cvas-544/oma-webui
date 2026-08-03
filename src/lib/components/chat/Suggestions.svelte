@@ -81,39 +81,43 @@
 	{/if}
 </div>
 
-<div class="h-40 w-full">
+<div class="w-full">
 	{#if filteredPrompts.length > 0}
-		<div role="list" class="max-h-40 overflow-auto scrollbar-none items-start {className}">
-			{#each filteredPrompts as prompt, idx (prompt.id || `${prompt.content}-${idx}`)}
+		<div role="list" class="overflow-auto scrollbar-none items-start {className}">
+			{#each filteredPrompts.slice(0, 4) as prompt, idx (prompt.id || `${prompt.content}-${idx}`)}
 				<!-- svelte-ignore a11y-no-interactive-element-to-noninteractive-role -->
 				<button
 					role="listitem"
 					class="waterfall flex flex-col flex-1 shrink-0 w-full justify-between
-				       px-3 py-2 rounded-xl bg-transparent hover:bg-black/5
-				       dark:hover:bg-white/5 transition group"
-					style="animation-delay: {idx * 60}ms"
+				       px-4 py-4 rounded-xl border transition group min-h-[130px]"
+					style="animation-delay: {idx * 60}ms; background-color: #EBF4FE; border-color: rgba(115,178,242,0.35);"
+					on:mouseenter={(e) => e.currentTarget.style.backgroundColor = '#D5E9FB'}
+					on:mouseleave={(e) => e.currentTarget.style.backgroundColor = '#EBF4FE'}
 					on:click={() => onSelect({ type: 'prompt', data: prompt.content })}
 				>
-					<div class="flex flex-col text-left">
+					<div class="flex flex-col text-left flex-1">
 						{#if prompt.title && prompt.title[0] !== ''}
 							<div
-								class="font-medium dark:text-gray-300 dark:group-hover:text-gray-200 transition line-clamp-1"
+								class="font-semibold text-gray-900 dark:text-gray-100 dark:group-hover:text-white transition line-clamp-2"
 							>
 								{prompt.title[0]}
 							</div>
-							<div class="text-xs text-gray-600 dark:text-gray-400 font-normal line-clamp-1">
+							<div class="text-xs text-gray-500 dark:text-gray-400 font-normal line-clamp-1 mt-0.5">
 								{prompt.title[1]}
 							</div>
 						{:else}
 							<div
-								class="font-medium dark:text-gray-300 dark:group-hover:text-gray-200 transition line-clamp-1"
+								class="font-semibold text-gray-900 dark:text-gray-100 dark:group-hover:text-white transition line-clamp-2"
 							>
 								{prompt.content}
 							</div>
-							<div class="text-xs text-gray-600 dark:text-gray-400 font-normal line-clamp-1">
-								{$i18n.t('Prompt')}
-							</div>
 						{/if}
+					</div>
+					<div class="flex justify-between items-center mt-2">
+						<span class="text-xs font-medium" style="color: #73B2F2;">{$i18n.t('Prompt')}</span>
+						<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#73B2F2" stroke-width="2.5" class="w-3.5 h-3.5 transition">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18" />
+						</svg>
 					</div>
 				</button>
 			{/each}

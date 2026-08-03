@@ -37,7 +37,7 @@
 </script>
 
 <div
-	class="mx-auto mb-2 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden w-4/5"
+	class="mx-auto mb-2 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg overflow-hidden w-[64%]"
 	role="dialog"
 	aria-label="Quick details"
 >
@@ -57,7 +57,7 @@
 	</div>
 
 	<!-- Groups — scrollable if many questions -->
-	<div class="overflow-y-auto max-h-64">
+	<div class="overflow-y-auto max-h-[18.4rem]">
 		{#each groups as group, gi}
 			<div class="border-t border-gray-100 dark:border-gray-800 px-4 py-2">
 				<div class="text-xs text-gray-500 dark:text-gray-400 mb-1.5">{group.question}</div>
@@ -67,8 +67,9 @@
 						<button
 							class="flex items-center gap-2.5 py-1.5 px-2 rounded-xl text-left transition
 								{selected
-									? 'bg-gray-900 dark:bg-gray-100'
+									? 'dark:bg-gray-100'
 									: 'hover:bg-gray-50 dark:hover:bg-gray-800'}"
+						style={selected ? 'background-color: #003877;' : ''}
 							on:click={() => select(gi, option)}
 							on:keydown={(e) => handleOptionKey(e, gi, option)}
 							aria-pressed={selected}
@@ -99,8 +100,9 @@
 		<button
 			class="w-full rounded-full py-2 text-sm font-semibold transition
 				{allSelected
-					? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-300 cursor-pointer'
+					? 'text-white dark:text-white cursor-pointer'
 					: 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'}"
+			style={allSelected ? 'background-color: #003877;' : ''}
 			on:click={handleSend}
 			disabled={!allSelected}
 		>

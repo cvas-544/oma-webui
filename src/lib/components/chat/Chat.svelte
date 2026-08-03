@@ -117,6 +117,9 @@
 	import Sidebar from '../icons/Sidebar.svelte';
 	import Image from '../common/Image.svelte';
 	import InvertixQuickDetails from './InvertixQuickDetails.svelte';
+	import EmojiRatingPopup from './Messages/EmojiRatingPopup.svelte';
+	import { emojiPopup } from '$lib/stores/emojiPopup';
+	import { artifacts, saveImageBlob } from '$lib/stores/artifacts';
 
 	export let chatIdProp = '';
 
@@ -682,10 +685,23 @@
 				} else if (type === 'invertix:ask_options') {
 					// Structured grouped option picker emitted by the Invertix stream filter.
 					pendingAskGroups = data.groups ?? [];
+				} else if (type === 'invertix:doc_ready') {
+					// Attach download card to message so it renders inside the message bubble.
+					message.invertixDocs = [...(message.invertixDocs ?? []), { name: data.name, url: data.url, ext: data.ext }];
+					history.messages[event.message_id] = message;
+					// Save to artifacts panel.
+					artifacts.add({ type: 'document', name: data.name, url: data.url, ext: data.ext, ts: Date.now(), chatId: $chatId, messageId: event.message_id });
+				} else if (type === 'invertix:step') {
+					// Accumulate reasoning steps on the message for the InvertixStepsCard.
+					message.invertixSteps = [...(message.invertixSteps ?? []), data];
+					history.messages[event.message_id] = message;
 				} else if (type === 'invertix:run_meta') {
-					// Store run_id per message so feedback signals can POST to /v1/feedback.
+					// Store run_id + backend_url per message for per-company feedback routing.
 					if (data?.run_id && message?.id) {
 						localStorage.setItem(`inv_rid_${message.id}`, data.run_id);
+						if (data.backend_url) {
+							localStorage.setItem(`inv_backend_${message.id}`, data.backend_url);
+						}
 					}
 				} else if (type === 'chat:outlet') {
 					// Outlet filter ran on backend — sync in-memory state
@@ -2030,6 +2046,25 @@
 
 		if (done) {
 			message.done = true;
+
+			// Extract inline base64 chart images and save to artifacts panel.
+			const _imgRe = /!\[[^\]]*\]\((data:image\/[^;]+;base64,[^)]+)\)/g;
+			let _imgMatch: RegExpExecArray | null;
+			let _imgIdx = 0;
+			const _content = message.content ?? '';
+			while ((_imgMatch = _imgRe.exec(_content)) !== null) {
+				const _dataUrl = _imgMatch[1];
+				const _artifactId = artifacts.add({
+					type: 'image',
+					name: `Chart ${new Date().toLocaleString()} #${_imgIdx + 1}`,
+					ts: Date.now(),
+					chatId: get(chatId),
+					messageId: message.id
+				});
+				saveImageBlob(_artifactId, _dataUrl).catch(() => {});
+				_imgIdx++;
+			}
+
 			const visibleContent =
 				getOutputText(message?.output) || removeAllDetails(message?.content ?? '');
 
@@ -3473,6 +3508,14 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Emoji feedback popup: rendered outside the main layout div so position:fixed
+     works relative to the viewport with no transform ancestors. -->
+<EmojiRatingPopup
+	show={$emojiPopup.show}
+	onSubmit={$emojiPopup.onSubmit}
+	onDismiss={() => emojiPopup.close()}
+/>
 
 <style>
 	::-webkit-scrollbar {
