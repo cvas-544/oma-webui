@@ -8,6 +8,22 @@ New files can be copied verbatim; modified files need the diff applied on top of
 
 ---
 
+## Changelog
+
+### 2026-08-05
+
+#### New Files
+| File | Purpose |
+|---|---|
+| `src/lib/components/common/ThemeSwitcher.svelte` | Light / Dark / System theme pill for the Navbar top-right. Three icon-only buttons (sun, moon, monitor) in a pill container. Reads and writes the existing `theme` store + `localStorage.theme`. Icons: `w-4 h-4`, `stroke-width="2.3"` — matches thumbs up/down icon style. |
+
+#### Modified Files
+| File | What changed | Why |
+|---|---|---|
+| `src/lib/components/chat/Navbar.svelte` | Removed Temporary Chat button, Controls (Knobs) button, and User avatar/menu from top-right. Replaced with `<ThemeSwitcher />`. Removed unused imports: `UserMenu`, `AdjustmentsHorizontal`, `ChatBubbleDotted`, `ChatBubbleDottedChecked`, `ChatCheck`, `Knobs`, `WEBUI_API_BASE_URL`. | Cleaner top-right; theme switching is the only control needed for the client deployment. |
+
+---
+
 ## New Files (copy verbatim)
 
 | File | Purpose |
