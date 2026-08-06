@@ -67,7 +67,9 @@
 	import OutputEditView from './OutputEditView.svelte';
 	import { getOutputText, replaceOutputMessageText, type OutputItem } from './structuredOutput';
 	import InvertixDocCard from '../InvertixDocCard.svelte';
+	import InvertixChartCard from '../InvertixChartCard.svelte';
 	import InvertixStepsCard from '../InvertixStepsCard.svelte';
+	import { chartLibCode } from '$lib/stores/chartLib';
 
 	interface MessageType {
 		id: string;
@@ -998,6 +1000,10 @@
 					</div>
 				</div>
 
+
+				{#if message.invertixCharts?.length > 0}
+					<InvertixChartCard charts={message.invertixCharts} chartLibCode={$chartLibCode} />
+				{/if}
 
 				{#if message.invertixDocs?.length > 0}
 					<InvertixDocCard docs={message.invertixDocs} onDismissAll={() => {}} />

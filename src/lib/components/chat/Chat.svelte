@@ -120,6 +120,7 @@
 	import EmojiRatingPopup from './Messages/EmojiRatingPopup.svelte';
 	import { emojiPopup } from '$lib/stores/emojiPopup';
 	import { artifacts, saveImageBlob } from '$lib/stores/artifacts';
+	import { chartLibCode as chartLibCodeStore } from '$lib/stores/chartLib';
 
 	export let chatIdProp = '';
 
@@ -169,6 +170,7 @@
 	let webSearchActive = false;
 
 	// Chart.js + Enerparc palette — loaded once from static, injected into every chart iframe.
+	// Stored in chartLibCodeStore so InvertixChartCard can access it without prop drilling.
 	let chartLibCode = '';
 	let showWebSearchConfirm = false;
 	let pendingWebSearchPrompt: string | null = null;
@@ -706,6 +708,9 @@
 							localStorage.setItem(`inv_backend_${message.id}`, data.backend_url);
 						}
 					}
+				} else if (type === 'invertix:chart') {
+					message.invertixCharts = [...(message.invertixCharts ?? []), data];
+					history.messages[event.message_id] = message;
 				} else if (type === 'chat:outlet') {
 					// Outlet filter ran on backend — sync in-memory state
 					const outletMessages = data.messages ?? [];
@@ -966,6 +971,7 @@
 		])
 			.then(([lib, helpers]) => {
 				chartLibCode = lib + '\n' + helpers;
+				chartLibCodeStore.set(chartLibCode);
 			})
 			.catch(() => {
 				console.warn('Chart.js static files not found — charts will render without library');

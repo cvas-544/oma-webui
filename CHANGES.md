@@ -17,11 +17,14 @@ New files can be copied verbatim; modified files need the diff applied on top of
 |---|---|
 | `static/chartjs/chart.umd.min.js` | Chart.js 4.4.9 UMD bundle (207KB). Loaded once by Chat.svelte and injected inline into every HTML artifact iframe. No CDN dependency — the file is served from the app's own static folder. |
 | `static/chartjs/chart-helpers.js` | Enerparc brand palette constants (CHART_BG, CHART_PALETTE, FIN_PALETTE, etc.) matching sandbox_executor.py preamble, Chart.js global defaults (font, colors, grid), and a `addDownloadButton(canvasId, filename)` helper that adds a "Save as PNG" button below any canvas element using the native `canvas.toDataURL()` API. |
+| `src/lib/components/chat/InvertixChartCard.svelte` | Inline chart card rendered inside the message bubble. Receives chart config JSON from `invertix:chart` events, builds Chart.js HTML, renders it in a sandboxed iframe (360px height, pointer-events disabled). Clicking the card opens the full interactive chart in the Artifacts panel (expand/zoom/download). Uses `chartLibCode` store to inject Chart.js + palette into the iframe. |
+| `src/lib/stores/chartLib.ts` | Writable Svelte store holding the concatenated Chart.js + chart-helpers.js source. Set once in Chat.svelte onMount, read by InvertixChartCard without prop drilling. |
 
 #### Modified Files
 | File | What changed | Why |
 |---|---|---|
-| `src/lib/components/chat/Chat.svelte` | Added `chartLibCode` variable (line ~172). In `onMount`, fetches `chart.umd.min.js` + `chart-helpers.js` from `/static/chartjs/` via `Promise.all` and concatenates into `chartLibCode`. In `getContents()`, prepends `chartLibCode` to `group.js` inside the iframe `<script>` block so every HTML artifact has Chart.js + brand palette available without any network request from the iframe. | Enables inline interactive charts in agent responses. Chart.js is loaded once from the server's own static folder (no external CDN — air-gapped from the iframe's perspective). Brand colors are injected as JS constants so the agent writes `CHART_PALETTE` instead of hardcoded hex values. |
+| `src/lib/components/chat/Chat.svelte` | Added `chartLibCode` variable + `chartLibCodeStore` import. In `onMount`, fetches Chart.js files and sets both local var and store. Added `invertix:chart` event handler that attaches chart config to `message.invertixCharts`. `getContents()` still prepends `chartLibCode` to iframe scripts for Artifacts panel rendering. | Chart.js loaded once from static folder (no CDN). Chart events from the filter attach to the message for inline rendering via InvertixChartCard. |
+| `src/lib/components/chat/Messages/ResponseMessage.svelte` | Import `InvertixChartCard` + `chartLibCode` store. Render `<InvertixChartCard>` when `message.invertixCharts` has entries (placed before InvertixDocCard). | Inline chart cards appear in the message bubble, matching the existing doc/step card pattern. |
 
 ---
 
@@ -256,18 +259,27 @@ All other env vars follow the standard OpenWebUI `.env.example`.
 
 ---
 
-## Filter (OpenWebUI Admin → Functions)
+## Filters (OpenWebUI Admin → Functions)
 
-The stream filter is not part of the SvelteKit source — it lives in the OpenWebUI database and must be pasted manually:
+Two stream filters — both live in the OpenWebUI database and must be pasted manually:
 
+### Filter 1: Main tag filter (invertix_filter.py)
 1. OpenWebUI Admin → Functions → New Function
-2. Paste the contents of `../backend/openwebui/invertix_filter.py` (relative to this repo root)
+2. Paste the contents of `../backend/openwebui/invertix_filter.py`
 3. Save
 
-The filter:
+Handles:
 - Strips `<!--ASK:...-->` tags and emits `invertix:ask_options` → drives the option picker
 - Strips `<!--INVERTIX-DOC:...-->` tags and emits `invertix:doc_ready` → drives doc cards
 - Strips `<!--INVERTIX-STEP:...-->` and emits `invertix:step` → drives step timeline
 - Parses `<!--INVERTIX-META:run_id=...,backend_url=...-->` and emits `invertix:run_meta` → enables per-message feedback routing to the correct per-company backend
 
-This filter must be re-pasted any time `backend/openwebui/invertix_filter.py` is updated.
+### Filter 2: Chart filter (invertix_chart_filter.py)
+1. OpenWebUI Admin → Functions → New Function
+2. Paste the contents of `../backend/openwebui/invertix_chart_filter.py`
+3. Save. Set execution order AFTER the main filter.
+
+Handles:
+- Strips `<!--INVERTIX-CHART:{json}-->` tags and emits `invertix:chart` → drives inline chart rendering via InvertixChartCard
+
+Both filters must be re-pasted any time their source files are updated.
