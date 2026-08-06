@@ -10,14 +10,30 @@ New files can be copied verbatim; modified files need the diff applied on top of
 
 ## Changelog
 
-### 2026-08-06
+### 2026-08-06 / 2026-08-07 — Inline Chart.js charts via custom filter tag
+
+Agent outputs `<!--INVERTIX-CHART:{json}-->` tags (hidden from user). A dedicated
+stream filter strips the tag and emits an `invertix:chart` event. The frontend
+renders the chart inline in the message bubble via a sandboxed iframe; clicking
+"Expand" opens the full interactive chart in the Artifacts panel (hover, zoom,
+download). No raw HTML is visible to the user. Chart.js and the Enerparc brand
+palette are served from the app's own static folder (no CDN — air-gapped from
+the iframe for supply-chain safety). PNG downloads include the `CHART_BG`
+background. Pie/doughnut/radar charts correctly omit x/y axis scales.
+
+Companion backend changes (separate repo `invertix-multitenant-agent`):
+- `backend/openwebui/invertix_chart_filter.py` — new filter, paste into OpenWebUI
+  Admin as a second Function (after `invertix_filter.py`)
+- `backend/agent/system_prompt.py` — Mode A changed from ` ```html ` code blocks
+  to `<!--INVERTIX-CHART:{json}-->` tags; all execute_code references for inline
+  chat charts removed (execute_code is now Mode B / PDF reports only)
 
 #### New Files
 | File | Purpose |
 |---|---|
-| `static/chartjs/chart.umd.min.js` | Chart.js 4.4.9 UMD bundle (207KB). Loaded once by Chat.svelte and injected inline into every HTML artifact iframe. No CDN dependency — the file is served from the app's own static folder. |
-| `static/chartjs/chart-helpers.js` | Enerparc brand palette constants (CHART_BG, CHART_PALETTE, FIN_PALETTE, etc.) matching sandbox_executor.py preamble, Chart.js global defaults (font, colors, grid), and a `addDownloadButton(canvasId, filename)` helper that adds a "Save as PNG" button below any canvas element using the native `canvas.toDataURL()` API. |
-| `src/lib/components/chat/InvertixChartCard.svelte` | Inline chart card rendered inside the message bubble. Receives chart config JSON from `invertix:chart` events, builds Chart.js HTML, renders it in a sandboxed iframe (360px height, pointer-events disabled). Clicking the card opens the full interactive chart in the Artifacts panel (expand/zoom/download). Uses `chartLibCode` store to inject Chart.js + palette into the iframe. |
+| `static/chartjs/chart.umd.min.js` | Chart.js 4.4.9 UMD bundle (207KB). Loaded once by Chat.svelte and injected inline into every chart iframe. No CDN dependency — served from the app's own static folder. |
+| `static/chartjs/chart-helpers.js` | Enerparc brand palette constants (CHART_BG, CHART_PALETTE, FIN_PALETTE, etc.) matching sandbox_executor.py, Chart.js global defaults (font, colors, grid), and `addDownloadButton(canvasId, filename)` helper. PNG export composites `CHART_BG` behind the canvas so downloads have a solid background. |
+| `src/lib/components/chat/InvertixChartCard.svelte` | Inline chart card rendered inside the message bubble. Receives chart config JSON from `invertix:chart` events, builds Chart.js HTML, renders it in a sandboxed iframe (360px height, pointer-events disabled). Clicking the card opens the full interactive chart in the Artifacts panel (expand/zoom/download). Skips x/y axis scales for pie/doughnut/radar/polarArea chart types. Uses `chartLibCode` store to inject Chart.js + palette into the iframe. |
 | `src/lib/stores/chartLib.ts` | Writable Svelte store holding the concatenated Chart.js + chart-helpers.js source. Set once in Chat.svelte onMount, read by InvertixChartCard without prop drilling. |
 
 #### Modified Files
