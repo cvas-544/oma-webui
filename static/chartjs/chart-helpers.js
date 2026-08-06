@@ -35,9 +35,16 @@ function addDownloadButton(canvasId, filename) {
     btn.onmouseover = function() { btn.style.background = CHART_AXES_BG; };
     btn.onmouseout  = function() { btn.style.background = 'white'; };
     btn.onclick = function() {
+        var tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = canvas.width;
+        tmpCanvas.height = canvas.height;
+        var tmpCtx = tmpCanvas.getContext('2d');
+        tmpCtx.fillStyle = CHART_BG;
+        tmpCtx.fillRect(0, 0, tmpCanvas.width, tmpCanvas.height);
+        tmpCtx.drawImage(canvas, 0, 0);
         var link = document.createElement('a');
         link.download = (filename || 'chart') + '.png';
-        link.href = canvas.toDataURL('image/png');
+        link.href = tmpCanvas.toDataURL('image/png');
         link.click();
     };
     canvas.parentNode.insertBefore(btn, canvas.nextSibling);

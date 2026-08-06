@@ -40,30 +40,36 @@
 					return out;
 				})
 			},
-			options: config.options || {
-				responsive: true,
-				plugins: {
-					title: {
-						display: !!config.title,
-						text: config.title || '',
-						color: 'CHART_TEXT_REF',
-						font: { size: 16 }
-					},
-					legend: { labels: { color: 'CHART_TEXT_REF' } }
-				},
-				scales: {
-					x: {
-						ticks: { color: 'CHART_TEXT_REF' },
-						grid: { color: 'CHART_GRID_REF' },
-						title: { display: !!config.xLabel, text: config.xLabel || '', color: 'CHART_TEXT_REF' }
-					},
-					y: {
-						ticks: { color: 'CHART_TEXT_REF' },
-						grid: { color: 'CHART_GRID_REF' },
-						title: { display: !!config.yLabel, text: config.yLabel || '', color: 'CHART_TEXT_REF' }
+			options: config.options || (() => {
+				const noScales = ['pie', 'doughnut', 'radar', 'polarArea'].includes(config.type);
+				const opts: any = {
+					responsive: true,
+					plugins: {
+						title: {
+							display: !!config.title,
+							text: config.title || '',
+							color: 'CHART_TEXT_REF',
+							font: { size: 16 }
+						},
+						legend: { labels: { color: 'CHART_TEXT_REF' } }
 					}
+				};
+				if (!noScales) {
+					opts.scales = {
+						x: {
+							ticks: { color: 'CHART_TEXT_REF' },
+							grid: { color: 'CHART_GRID_REF' },
+							title: { display: !!config.xLabel, text: config.xLabel || '', color: 'CHART_TEXT_REF' }
+						},
+						y: {
+							ticks: { color: 'CHART_TEXT_REF' },
+							grid: { color: 'CHART_GRID_REF' },
+							title: { display: !!config.yLabel, text: config.yLabel || '', color: 'CHART_TEXT_REF' }
+						}
+					};
 				}
-			}
+				return opts;
+			})()
 		};
 
 		let configStr = JSON.stringify(chartJsConfig);
