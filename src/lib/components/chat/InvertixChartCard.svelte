@@ -74,29 +74,21 @@
 		configStr = configStr.replace(/\"CHART_TEXT_REF\"/g, 'CHART_TEXT');
 		configStr = configStr.replace(/\"CHART_GRID_REF\"/g, 'CHART_GRID');
 
-		return `<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<style>
-		body { margin: 0; background-color: #F6F7FB; font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
-		#chart-wrap { padding: 16px; border-radius: 8px; max-width: 720px; margin: auto; }
-	</style>
-</head>
-<body>
-	<div id="chart-wrap">
-		<canvas id="${canvasId}"></canvas>
-	</div>
-	<script>
-		${chartLibCode}
-		document.body.style.backgroundColor = CHART_BG;
-		var ctx = document.getElementById('${canvasId}').getContext('2d');
-		new Chart(ctx, ${configStr});
-		addDownloadButton('${canvasId}', '${filename.replace(/'/g, "\\'")}');
-	</script>
-</body>
-</html>`;
+		const safeFilename = filename.replace(/'/g, "\\'");
+		return '<!DOCTYPE html>' +
+			'<html lang="en"><head><meta charset="UTF-8">' +
+			'<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+			'<style>body{margin:0;background-color:#F6F7FB;font-family:Inter,Segoe UI,system-ui,sans-serif}' +
+			'#chart-wrap{padding:16px;border-radius:8px;max-width:720px;margin:auto}</style>' +
+			'</head><body><div id="chart-wrap">' +
+			'<canvas id="' + canvasId + '"></canvas></div>' +
+			'<' + 'script>' +
+			chartLibCode +
+			'document.body.style.backgroundColor=CHART_BG;' +
+			'var ctx=document.getElementById("' + canvasId + '").getContext("2d");' +
+			'new Chart(ctx,' + configStr + ');' +
+			'addDownloadButton("' + canvasId + '","' + safeFilename + '");' +
+			'</' + 'script></body></html>';
 	}
 
 	async function expandChart(config: any) {
