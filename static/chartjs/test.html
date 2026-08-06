@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chart.js Injection Test</title>
+    <style>body { font-family: system-ui; padding: 20px; background: #f9f9f9; }</style>
+</head>
+<body>
+    <h2>Chart.js + Enerparc Palette Injection Test</h2>
+    <p>This simulates what Chat.svelte injects into an iframe's &lt;script&gt; block.</p>
+    <hr>
+    <div id="chart-wrap" style="padding:16px;border-radius:8px;max-width:720px;margin:auto">
+        <canvas id="chart1"></canvas>
+    </div>
+    <div id="status" style="margin-top:16px;padding:10px;border-radius:6px;"></div>
+
+    <!-- Step 1: Chart.js library (same as Chat.svelte loads from /chartjs/chart.umd.min.js) -->
+    <script src="/chartjs/chart.umd.min.js"></script>
+    <!-- Step 2: Brand palette + helpers (same as Chat.svelte loads from /chartjs/chart-helpers.js) -->
+    <script src="/chartjs/chart-helpers.js"></script>
+    <!-- Step 3: Agent-generated chart code (this is what the LLM would output) -->
+    <script>
+        document.body.style.backgroundColor = CHART_BG;
+        document.getElementById('chart-wrap').style.backgroundColor = CHART_AXES_BG;
+
+        const ctx = document.getElementById('chart1').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Mar 1', 'Mar 2', 'Mar 3', 'Mar 4', 'Mar 5', 'Mar 6', 'Mar 7'],
+                datasets: [{
+                    label: 'Energy (kWh)',
+                    data: [155.4, 142.1, 168.7, 131.2, 175.3, 160.8, 148.5],
+                    backgroundColor: CHART_PALETTE,
+                    borderColor: CHART_PALETTE[0],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Daily Energy Production — Plant C1-001, March 2026',
+                        color: CHART_TEXT,
+                        font: { size: 16 }
+                    },
+                    legend: { labels: { color: CHART_TEXT } }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: CHART_TEXT },
+                        grid: { color: CHART_GRID },
+                        title: { display: true, text: 'Date', color: CHART_TEXT }
+                    },
+                    y: {
+                        ticks: { color: CHART_TEXT },
+                        grid: { color: CHART_GRID },
+                        title: { display: true, text: 'kWh', color: CHART_TEXT }
+                    }
+                }
+            }
+        });
+
+        addDownloadButton('chart1', 'energy-production-mar2026');
+
+        // Status check
+        const status = document.getElementById('status');
+        const checks = [
+            ['Chart.js loaded', typeof Chart !== 'undefined'],
+            ['CHART_PALETTE defined', Array.isArray(CHART_PALETTE) && CHART_PALETTE.length === 5],
+            ['CHART_BG = #F6F7FB', CHART_BG === '#F6F7FB'],
+            ['addDownloadButton exists', typeof addDownloadButton === 'function'],
+            ['Canvas rendered', document.querySelector('canvas').toDataURL().length > 1000],
+        ];
+        status.innerHTML = checks.map(([name, ok]) =>
+            `<div style="color:${ok ? '#2d7d46' : '#c0392b'}">${ok ? '✓' : '✗'} ${name}</div>`
+        ).join('');
+        status.style.background = checks.every(c => c[1]) ? '#e8f5e9' : '#ffebee';
+    </script>
+</body>
+</html>

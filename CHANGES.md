@@ -10,6 +10,21 @@ New files can be copied verbatim; modified files need the diff applied on top of
 
 ## Changelog
 
+### 2026-08-06
+
+#### New Files
+| File | Purpose |
+|---|---|
+| `static/chartjs/chart.umd.min.js` | Chart.js 4.4.9 UMD bundle (207KB). Loaded once by Chat.svelte and injected inline into every HTML artifact iframe. No CDN dependency — the file is served from the app's own static folder. |
+| `static/chartjs/chart-helpers.js` | Enerparc brand palette constants (CHART_BG, CHART_PALETTE, FIN_PALETTE, etc.) matching sandbox_executor.py preamble, Chart.js global defaults (font, colors, grid), and a `addDownloadButton(canvasId, filename)` helper that adds a "Save as PNG" button below any canvas element using the native `canvas.toDataURL()` API. |
+
+#### Modified Files
+| File | What changed | Why |
+|---|---|---|
+| `src/lib/components/chat/Chat.svelte` | Added `chartLibCode` variable (line ~172). In `onMount`, fetches `chart.umd.min.js` + `chart-helpers.js` from `/static/chartjs/` via `Promise.all` and concatenates into `chartLibCode`. In `getContents()`, prepends `chartLibCode` to `group.js` inside the iframe `<script>` block so every HTML artifact has Chart.js + brand palette available without any network request from the iframe. | Enables inline interactive charts in agent responses. Chart.js is loaded once from the server's own static folder (no external CDN — air-gapped from the iframe's perspective). Brand colors are injected as JS constants so the agent writes `CHART_PALETTE` instead of hardcoded hex values. |
+
+---
+
 ### 2026-08-05
 
 #### New Files

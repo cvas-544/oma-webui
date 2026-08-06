@@ -167,6 +167,9 @@
 	let webSearchEnabled = false;
 	let codeInterpreterEnabled = false;
 	let webSearchActive = false;
+
+	// Chart.js + Enerparc palette — loaded once from static, injected into every chart iframe.
+	let chartLibCode = '';
 	let showWebSearchConfirm = false;
 	let pendingWebSearchPrompt: string | null = null;
 	let webSearchConfirmed = false;
@@ -955,6 +958,19 @@
 		$socket?.on('events', chatEventHandler);
 		$socket?.on('connect', handleSocketConnect);
 
+		// Load Chart.js + brand helpers once; injected into every chart iframe.
+		// SvelteKit serves static/ contents at the root URL (no /static/ prefix).
+		Promise.all([
+			fetch('/chartjs/chart.umd.min.js').then((r) => r.text()),
+			fetch('/chartjs/chart-helpers.js').then((r) => r.text())
+		])
+			.then(([lib, helpers]) => {
+				chartLibCode = lib + '\n' + helpers;
+			})
+			.catch(() => {
+				console.warn('Chart.js static files not found — charts will render without library');
+			});
+
 		$audioQueue?.destroy();
 
 		const audioQueueInstance = new AudioQueue(document.getElementById('audioElement'));
@@ -1344,6 +1360,7 @@
                             ${group.html}
 
 							<${''}script>
+							${chartLibCode}
                             	${group.js}
 							</${''}script>
                         </body>
