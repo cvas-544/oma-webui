@@ -10,6 +10,49 @@ New files can be copied verbatim; modified files need the diff applied on top of
 
 ## Changelog
 
+### 2026-08-07 — Custom branded login page (v1)
+
+Replaced the stock OpenWebUI login page (`src/routes/auth/+page.svelte`) with a
+minimal branded login page for Azure AD / Microsoft OIDC authentication.
+
+**What the page does:**
+1. Shows the Enerparc logo + "AI TOOLS PLATFORM" subtitle
+2. A tool selector dropdown ("Select your AI tool") — currently "O&M Assistant",
+   extensible for future tools. Selection persisted to `localStorage.oma_selected_tool`.
+3. A single "Continue with Microsoft" pill button (Enerparc brand color #143773)
+   that redirects to the backend OAuth handler (`/oauth/microsoft/login`)
+4. Footer: "Secured by Azure AD . Enerparc AG"
+
+**What was removed from the stock page:** email/password form, sign-up flow, LDAP,
+Google/GitHub/OIDC/Feishu social login buttons, onboarding wizard. All removed code
+is preserved in `src/routes/auth/+page.svelte.bak`.
+
+**What was kept:** `oauthCallbackHandler()` (reads token cookie after Microsoft
+redirect), `setSessionUser()`, `signInHandler()` (for trusted-header auth fallback),
+`onMount` session/redirect/error logic.
+
+#### New Files
+| File | Purpose |
+|---|---|
+| `static/oma-login-bg.png` | Background image — aerial photo of Enerparc PV plant (landscape). Served at root URL (`/oma-login-bg.png`). 179KB. Source: `enerparcPlantBg01.png`. |
+| `src/routes/auth/+page.svelte.bak` | Backup of the original stock OpenWebUI auth page before modification. |
+
+#### Modified Files
+| File | What changed | Why |
+|---|---|---|
+| `src/routes/auth/+page.svelte` | Complete rewrite (~306 lines replaces ~630 lines). Removed: email/password form, sign-up, LDAP, social OAuth buttons, onboarding. Added: full-viewport background image with navy overlay, centered white card (448px, 20px border-radius), tool selector dropdown (absolute positioned), branded CTA button (#143773), divider between selector and button. Uses OpenWebUI Tailwind classes (`rounded-full`, `bg-gray-700/5`, `text-sm`) for form elements; scoped CSS only for layout (viewport, bg layer, overlay, card). | Single-SSO login — users authenticate via Azure AD only; no local accounts. |
+
+#### Design details
+- **Background:** `enerparcPlantBg01.png` with navy gradient overlay (`rgba(12,35,64, 0.35/0.15/0.3)`)
+- **Card:** 448px wide, 64px vertical padding, 44px horizontal padding, `border-radius: 20px`
+- **Button:** Enerparc brand navy (#143773), white text, `rounded-full` pill, ~70% card width centered
+- **Dropdown:** Absolute positioned overlay (card does not resize on open), `rounded-xl`
+- **Divider:** `border-t border-gray-200` between dropdown and button with `my-6` spacing
+- **Logo:** `static/enerparc-full-logo.png` (already existed), `h-10`
+- **Dark mode:** Dropdown and form elements support dark mode via Tailwind `dark:` classes; card background stays white
+
+---
+
 ### 2026-08-06 / 2026-08-07 — Inline Chart.js charts via custom filter tag
 
 Agent outputs `<!--INVERTIX-CHART:{json}-->` tags (hidden from user). A dedicated
@@ -186,6 +229,13 @@ Companion backend changes (separate repo `invertix-multitenant-agent`):
 | "Edit" button removed from action bar | Not needed in agent UI; users can't edit agent responses. |
 | "Read Aloud" (TTS) button removed | Replaced by Download button. |
 | "Continue Response" button removed | Agent runs are atomic; continuation doesn't apply. |
+
+#### Replaced upstream thinking indicator
+| What changed | Why |
+|---|---|
+| Upstream `<Skeleton />` render block removed (was shown when `!hasResponseContent && !message.done`) | `Skeleton.svelte` is the pulsing black dot OpenWebUI shows while the model is generating but has produced no text yet. We removed this conditional block entirely. |
+| `<InvertixStepsCard>` renders at line 913 instead, shown when `message.invertixSteps?.length > 0` | The stream filter emits `invertix:step` events as the agent runs tools; these populate `message.invertixSteps` immediately, so the step timeline appears in place of the dot. Users see agent tool progress instead of an opaque spinner. |
+| `import Skeleton from './Skeleton.svelte'` (line 44) is now a dead import | Left in place; safe to remove in a future cleanup pass. |
 
 ---
 
