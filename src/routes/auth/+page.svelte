@@ -171,10 +171,13 @@
 							<div class="text-sm font-normal" style="color: #111827;">{selectedTool.name}</div>
 							<div class="text-xs" style="color: #6b7280;">{selectedTool.desc}</div>
 						</div>
+						<svg class="w-4 h-4" style="color: #9ca3af;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<polyline points="6 9 12 15 18 9" />
+						</svg>
 					</div>
 				</div>
 
-				<div class="my-6 border-t border-gray-200 dark:border-gray-700"></div>
+				<div class="my-6" style="border-top: 1px solid #f0f0f0;"></div>
 
 				<!-- Microsoft button -->
 				<div class="mt-0 flex justify-center">
@@ -247,8 +250,8 @@
 		z-index: 2;
 		background: #ffffff;
 		border-radius: 20px;
-		padding: 44px;
-		width: 400px;
+		padding: 64px 44px;
+		width: 448px;
 		max-width: calc(100% - 40px);
 		box-shadow:
 			0 4px 6px rgba(0, 0, 0, 0.04),
