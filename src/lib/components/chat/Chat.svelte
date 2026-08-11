@@ -1030,7 +1030,7 @@
 					if (shouldAutoScrollResponse()) {
 						scrollToBottom('smooth');
 					}
-				} else if (type === 'oma:chart') {
+				} else if (type === 'invertix:chart') {
 					message.omaCharts = [...(message.omaCharts ?? []), data];
 					history.messages[event.message_id] = message;
 				} else if (type === 'invertix:ask_options') {

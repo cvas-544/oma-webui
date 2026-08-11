@@ -22,7 +22,7 @@
 	}[] = [];
 	export let chartLibCode: string = '';
 
-	function buildChartHtml(config: any): string {
+	function buildChartHtml(config: any, libCode: string): string {
 		const canvasId = 'chart_' + Math.random().toString(36).slice(2, 8);
 		const filename = config.filename || 'chart';
 
@@ -89,7 +89,7 @@
 			'</head><body><div id="chart-wrap">' +
 			'<canvas id="' + canvasId + '"></canvas></div>' +
 			'<' + 'script>' +
-			chartLibCode +
+			libCode +
 			'document.body.style.backgroundColor=CHART_BG;' +
 			'var ctx=document.getElementById("' + canvasId + '").getContext("2d");' +
 			'new Chart(ctx,' + configStr + ');' +
@@ -98,7 +98,7 @@
 	}
 
 	async function expandChart(config: any) {
-		const html = buildChartHtml(config);
+		const html = buildChartHtml(config, chartLibCode);
 		artifactContents.set([{ type: 'iframe', content: html }]);
 		await tick();
 		showArtifacts.set(true);
@@ -116,7 +116,7 @@
 			title="Click to expand chart"
 		>
 			<iframe
-				srcdoc={buildChartHtml(config)}
+				srcdoc={buildChartHtml(config, chartLibCode)}
 				sandbox="allow-scripts"
 				style="width:100%;height:360px;border:none;pointer-events:none;"
 				title={config.title || 'Chart'}
