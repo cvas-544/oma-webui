@@ -427,12 +427,7 @@
 	}
 
 	const checkForVersionUpdates = async () => {
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
+		version = { current: WEBUI_VERSION, latest: WEBUI_VERSION };
 	};
 </script>
 
