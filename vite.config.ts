@@ -4,6 +4,16 @@ import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
+	server: {
+		proxy: {
+			'/api': 'http://localhost:3000',
+			'/uploads': 'http://localhost:3000',
+			'/static': 'http://localhost:3000',
+			'/ollama': 'http://localhost:3000',
+			'/openai': 'http://localhost:3000',
+			'/ws': { target: 'ws://localhost:3000', ws: true }
+		}
+	},
 	plugins: [
 		sveltekit(),
 		viteStaticCopy({
