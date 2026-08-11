@@ -30,8 +30,8 @@
 				}}
 			>
 				<img
-					src="{WEBUI_BASE_URL}/static/splash.png"
-					class="size-11 dark:invert p-0.5"
+					src="/enerparc-full-logo.png"
+					class="w-9 h-auto dark:invert p-0.5"
 					alt="logo"
 					draggable="false"
 				/>
@@ -55,8 +55,8 @@
 			}}
 		>
 			<img
-				src="{WEBUI_BASE_URL}/static/favicon.png"
-				class="size-10 {selected === '' ? 'rounded-2xl' : 'rounded-full'}"
+				src="/enerparc-full-logo.png"
+				class="w-9 h-auto {selected === '' ? 'rounded-2xl' : 'rounded-full'}"
 				alt="logo"
 				draggable="false"
 			/>
