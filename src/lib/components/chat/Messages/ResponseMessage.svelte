@@ -65,6 +65,8 @@
 	import FullHeightIframe from '$lib/components/common/FullHeightIframe.svelte';
 	import OutputEditView from './OutputEditView.svelte';
 	import { getOutputText, replaceOutputMessageText, type OutputItem } from './structuredOutput';
+	import OmaChartCard from '../OmaChartCard.svelte';
+	import { omaChartLibCode } from '$lib/stores/omaChartLib';
 
 	interface MessageType {
 		id: string;
@@ -891,6 +893,10 @@
 
 							{#if message.code_executions}
 								<CodeExecutions codeExecutions={message.code_executions} />
+							{/if}
+
+							{#if message.omaCharts?.length > 0}
+								<OmaChartCard charts={message.omaCharts} chartLibCode={$omaChartLibCode} />
 							{/if}
 						</div>
 					</div>

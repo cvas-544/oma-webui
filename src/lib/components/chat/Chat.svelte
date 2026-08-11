@@ -49,6 +49,7 @@
 		desktopEvent
 	} from '$lib/stores';
 	import { refreshChatList, refreshFolderChatLists } from '$lib/stores/chatList';
+	import { omaChartLibCode } from '$lib/stores/omaChartLib';
 
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
@@ -365,6 +366,7 @@
 
 	let generating = false;
 	let dragged = false;
+	let chartLibCode = '';
 
 	// Invertix: pending grouped option picker — set by invertix:ask_options event,
 	// cleared when the user submits any message.
@@ -1028,6 +1030,9 @@
 					if (shouldAutoScrollResponse()) {
 						scrollToBottom('smooth');
 					}
+				} else if (type === 'oma:chart') {
+					message.omaCharts = [...(message.omaCharts ?? []), data];
+					history.messages[event.message_id] = message;
 				} else if (type === 'invertix:ask_options') {
 					// Structured grouped option picker emitted by the Invertix stream filter.
 					pendingAskGroups = data.groups ?? [];
@@ -1285,6 +1290,18 @@
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('events', chatEventHandler);
 		$socket?.on('connect', handleSocketConnect);
+
+		Promise.all([
+			fetch('/chartjs/chart.umd.min.js').then((r) => r.text()),
+			fetch('/chartjs/chart-helpers.js').then((r) => r.text())
+		])
+			.then(([lib, helpers]) => {
+				chartLibCode = lib + '\n' + helpers;
+				omaChartLibCode.set(chartLibCode);
+			})
+			.catch(() => {
+				console.warn('Chart.js static files not found');
+			});
 
 		$audioQueue?.destroy();
 
@@ -1677,6 +1694,7 @@
                             ${group.html}
 
 							<${''}script>
+                            	${chartLibCode}
                             	${group.js}
 							</${''}script>
                         </body>
