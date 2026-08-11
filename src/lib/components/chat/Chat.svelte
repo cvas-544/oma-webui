@@ -118,7 +118,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 	import Image from '../common/Image.svelte';
-	import InvertixQuickDetails from './InvertixQuickDetails.svelte';
+	import OmaQuickDetails from './OmaQuickDetails.svelte';
 	import XMark from '../icons/XMark.svelte';
 	import EmbeddedChatHistoryDropdown from './EmbeddedChatHistoryDropdown.svelte';
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
@@ -3980,16 +3980,18 @@
 									class=" pb-2 {dragged ? 'z-0' : 'z-10'}"
 								>
 									{#if pendingAskGroups.length > 0}
-										<InvertixQuickDetails
-											groups={pendingAskGroups}
-											onSubmit={async (text) => {
-												pendingAskGroups = [];
-												await submitPrompt(text, []);
-											}}
-											onDismiss={() => {
-												pendingAskGroups = [];
-											}}
-										/>
+										<div class="max-w-[58rem] mx-auto w-full px-2.5">
+											<OmaQuickDetails
+												groups={pendingAskGroups}
+												onSubmit={async (text) => {
+													pendingAskGroups = [];
+													await submitPrompt(text, []);
+												}}
+												onDismiss={() => {
+													pendingAskGroups = [];
+												}}
+											/>
+										</div>
 									{/if}
 
 									<MessageInput
