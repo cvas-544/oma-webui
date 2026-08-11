@@ -7,11 +7,6 @@
 	import Functions from '$lib/components/admin/Functions.svelte';
 
 	onMount(async () => {
-		if (!$config?.features?.enable_plugins) {
-			await goto('/admin', { replaceState: true });
-			return;
-		}
-
 		await Promise.all([
 			(async () => {
 				functions.set(await getFunctions(localStorage.token));
