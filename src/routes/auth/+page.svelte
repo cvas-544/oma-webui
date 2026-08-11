@@ -141,6 +141,18 @@
 	{/each}
 	<div class="oma-bg-overlay" />
 
+	<!-- Dot indicators -->
+	<div class="oma-dots">
+		{#each bgImages as _, i}
+			<button
+				class="oma-dot"
+				class:active={currentBg === i}
+				on:click={() => { currentBg = i; clearInterval(bgInterval); bgInterval = setInterval(() => { currentBg = (currentBg + 1) % bgImages.length; }, 10000); }}
+				aria-label="Background {i + 1}"
+			/>
+		{/each}
+	</div>
+
 	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region" />
 
 	{#if loaded}
@@ -256,6 +268,32 @@
 		box-shadow:
 			0 4px 6px rgba(0, 0, 0, 0.04),
 			0 20px 50px rgba(12, 35, 64, 0.18);
+	}
+
+	.oma-dots {
+		position: absolute;
+		bottom: 24px;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		gap: 8px;
+		z-index: 4;
+	}
+
+	.oma-dot {
+		height: 8px;
+		width: 8px;
+		border-radius: 9999px;
+		border: none;
+		padding: 0;
+		cursor: pointer;
+		background: rgba(255, 255, 255, 0.4);
+		transition: all 0.3s ease;
+	}
+
+	.oma-dot.active {
+		width: 24px;
+		background: #ffffff;
 	}
 
 	.oma-ms-btn {
