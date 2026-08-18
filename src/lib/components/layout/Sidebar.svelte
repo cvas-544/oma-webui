@@ -92,11 +92,14 @@
 	import DropdownMenu from '../common/DropdownMenu.svelte';
 	import CheckIcon from '../icons/Check.svelte';
 	import MoreHorizontalIcon from './Sidebar/icons/MoreHorizontal.svelte';
+	import ArtifactsPanel from './Sidebar/ArtifactsPanel.svelte';
+	import { artifacts } from '$lib/stores/artifacts';
 
 	const BREAKPOINT = 768;
 	const DEFAULT_PINNED_ITEMS = ['notes', 'workspace'];
 
 	let scrollTop = 0;
+	let showArtifacts = false;
 
 	let navElement;
 	let shiftKey = false;
@@ -1378,6 +1381,18 @@
 								initChatList();
 							}}
 						/>
+					</SidebarSection>
+				{/if}
+
+				{#if $artifacts.length > 0}
+					<SidebarSection
+						id="sidebar-artifacts"
+						bind:open={showArtifacts}
+						className="mt-0.5"
+						name="Artifacts"
+						dragAndDrop={false}
+					>
+						<ArtifactsPanel />
 					</SidebarSection>
 				{/if}
 
