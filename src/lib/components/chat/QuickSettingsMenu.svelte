@@ -164,7 +164,7 @@
 		"
 	>
 		<button
-			class="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+			class="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#003877] dark:hover:text-[#73B2F2] transition-colors"
 			on:click={handleLogout}
 			aria-label="Sign out"
 		>
