@@ -67,6 +67,9 @@
 	import { getOutputText, replaceOutputMessageText, type OutputItem } from './structuredOutput';
 	import OmaChartCard from '../OmaChartCard.svelte';
 	import { omaChartLibCode } from '$lib/stores/omaChartLib';
+	import InvertixStepsCard from '../InvertixStepsCard.svelte';
+	import InvertixDocCard from '../InvertixDocCard.svelte';
+	import { emojiPopup } from '$lib/stores/emojiPopup';
 
 	interface MessageType {
 		id: string;
@@ -206,6 +209,64 @@
 
 	let showRateComment = false;
 
+	const INVERTIX_BACKEND = import.meta.env.VITE_INVERTIX_BACKEND ?? '';
+
+	const sendFeedback = async (signal: string, value: number, comment?: string) => {
+		const runId = localStorage.getItem(`inv_rid_${message.id}`) ?? '';
+		const backendUrl = localStorage.getItem(`inv_backend_${message.id}`) ?? INVERTIX_BACKEND;
+		if (!runId || !backendUrl) return;
+		try {
+			await fetch(`${backendUrl}/v1/feedback`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ run_id: runId, signal, value, comment: comment ?? null })
+			});
+		} catch (_) {}
+	};
+
+	const downloadFile = async (url: string, name: string) => {
+		try {
+			const res = await fetch(url);
+			const blob = await res.blob();
+			const a = document.createElement('a');
+			a.href = URL.createObjectURL(blob);
+			a.download = name;
+			a.click();
+		} catch (_) {
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = name;
+			a.target = '_blank';
+			a.click();
+		}
+	};
+
+	// Persist downloadables across re-renders — backend URLs expire, localStorage survives.
+	let _downloadables: { name: string; url: string }[] = [];
+	let _downloadablesForId: string = '';
+	const _dlKey = (id: string) => `inv_dl_${id}`;
+
+	$: {
+		const mid = (message as any)?.id ?? '';
+		if (mid !== _downloadablesForId) {
+			_downloadablesForId = mid;
+			const stored = mid ? localStorage.getItem(_dlKey(mid)) : null;
+			_downloadables = stored ? JSON.parse(stored) : [];
+		}
+		const content = message?.content ?? '';
+		const items: { name: string; url: string }[] = [];
+		const docRe = /\[Download ([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+		let m: RegExpExecArray | null;
+		while ((m = docRe.exec(content)) !== null) items.push({ name: m[1], url: m[2] });
+		for (const doc of (message as any)?.invertixDocs ?? []) {
+			if (doc?.url && !items.find((i) => i.url === doc.url)) items.push({ name: doc.name, url: doc.url });
+		}
+		if (items.length > 0) {
+			_downloadables = items;
+			if (mid) localStorage.setItem(_dlKey(mid), JSON.stringify(items));
+		}
+	}
+
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
 
@@ -216,6 +277,7 @@
 		const res = await _copyToClipboard(text, null, $settings?.copyFormatted ?? false);
 		if (res) {
 			toast.success($i18n.t('Copying to clipboard was successful!'));
+			sendFeedback('copy_to_clipboard', 1);
 		}
 	};
 
@@ -537,7 +599,7 @@
 		await tick();
 
 		if (!details) {
-			showRateComment = true;
+			// showRateComment = true; // Invertix: disabled — we use the EmojiRatingPopup instead
 
 			if (!updatedMessage.annotation?.tags && (message?.content ?? '') !== '') {
 				// attempt to generate tags
@@ -809,12 +871,14 @@
 							</div>
 						{/if}
 
+						<InvertixStepsCard steps={message.invertixSteps ?? []} streaming={!message.done} responding={!message.done && hasResponseContent} />
+
 						<div
 							bind:this={contentContainerElement}
 							class="w-full flex flex-col relative {edit ? 'hidden' : ''}"
 							id="response-content-container"
 						>
-							{#if !hasResponseContent && !message.done && !message.error && !hasVisibleStatus}
+							{#if false}
 								<Skeleton />
 							{:else if hasResponseContent && message.error !== true}
 								<!-- always show message contents even if there's an error -->
@@ -898,9 +962,14 @@
 							{#if message.omaCharts?.length > 0}
 								<OmaChartCard charts={message.omaCharts} chartLibCode={$omaChartLibCode} />
 							{/if}
+
 						</div>
 					</div>
 				</div>
+
+				{#if message.invertixDocs?.length > 0}
+					<InvertixDocCard docs={message.invertixDocs} onDismissAll={() => {}} />
+				{/if}
 
 				{#if compactPreview && message.timestamp}
 					<div class="mt-0.5 flex justify-start whitespace-nowrap text-gray-600 dark:text-gray-500">
@@ -1081,6 +1150,37 @@
 									</button>
 								</Tooltip>
 
+								{#if _downloadables.length > 0}
+									<Tooltip content={$i18n.t('Download')} placement="bottom">
+										<button
+											aria-label={$i18n.t('Download')}
+											class="{isLastMessage || ($settings?.highContrastMode ?? false)
+												? 'visible'
+												: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
+											on:click={() => {
+												_downloadables.forEach((d) => downloadFile(d.url, d.name));
+												sendFeedback('download_artifact', 1);
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke-width="2.3"
+												aria-hidden="true"
+												stroke="currentColor"
+												class="w-4 h-4"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
+												/>
+											</svg>
+										</button>
+									</Tooltip>
+								{/if}
+
 								{#if onInsertToNote && visibleResponseContent}
 									<Tooltip content={$i18n.t('Insert into note')} placement="bottom">
 										<button
@@ -1244,11 +1344,15 @@
 												disabled={feedbackLoading}
 												on:click={async () => {
 													await feedbackHandler(1);
-													window.setTimeout(() => {
-														document
-															.getElementById(`message-feedback-${message.id}`)
-															?.scrollIntoView();
-													}, 0);
+													sendFeedback('user_feedback', 1);
+													emojiPopup.open(async ({ rating, feedback, reasons }) => {
+														const vals: Record<string, number> = { 'very-sad': 1, sad: 2, neutral: 3, happy: 4 };
+														const fullComment = [reasons.join(', '), feedback].filter(Boolean).join(' — ') || undefined;
+														sendFeedback('user_feedback_detail', vals[rating] ?? 0, fullComment);
+														if (reasons.length > 0) sendFeedback('feedback_categories', 1, reasons.join(', '));
+														if (fullComment) await feedbackHandler(null, { comment: fullComment, reason: rating });
+														emojiPopup.close();
+													});
 												}}
 											>
 												<svg
@@ -1282,11 +1386,15 @@
 												disabled={feedbackLoading}
 												on:click={async () => {
 													await feedbackHandler(-1);
-													window.setTimeout(() => {
-														document
-															.getElementById(`message-feedback-${message.id}`)
-															?.scrollIntoView();
-													}, 0);
+													sendFeedback('user_feedback', -1);
+													emojiPopup.open(async ({ rating, feedback, reasons }) => {
+														const vals: Record<string, number> = { 'very-sad': 1, sad: 2, neutral: 3, happy: 4 };
+														const fullComment = [reasons.join(', '), feedback].filter(Boolean).join(' — ') || undefined;
+														sendFeedback('user_feedback_detail', vals[rating] ?? 0, fullComment);
+														if (reasons.length > 0) sendFeedback('feedback_categories', 1, reasons.join(', '));
+														if (fullComment) await feedbackHandler(null, { comment: fullComment, reason: rating });
+														emojiPopup.close();
+													});
 												}}
 											>
 												<svg

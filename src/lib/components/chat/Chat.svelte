@@ -119,6 +119,8 @@
 	import Sidebar from '../icons/Sidebar.svelte';
 	import Image from '../common/Image.svelte';
 	import OmaQuickDetails from './OmaQuickDetails.svelte';
+	import EmojiRatingPopup from './Messages/EmojiRatingPopup.svelte';
+	import { emojiPopup } from '$lib/stores/emojiPopup';
 	import XMark from '../icons/XMark.svelte';
 	import EmbeddedChatHistoryDropdown from './EmbeddedChatHistoryDropdown.svelte';
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
@@ -1036,6 +1038,15 @@
 				} else if (type === 'invertix:ask_options') {
 					// Structured grouped option picker emitted by the Invertix stream filter.
 					pendingAskGroups = data.groups ?? [];
+				} else if (type === 'invertix:run_meta') {
+					localStorage.setItem('inv_rid_' + message.id, data.run_id ?? '');
+					localStorage.setItem('inv_backend_' + message.id, data.backend_url ?? '');
+				} else if (type === 'invertix:step') {
+					message.invertixSteps = [...(message.invertixSteps ?? []), data];
+					history.messages[event.message_id] = message;
+				} else if (type === 'invertix:doc_ready') {
+					message.invertixDocs = [...(message.invertixDocs ?? []), data];
+					history.messages[event.message_id] = message;
 				} else if (type === 'chat:outlet') {
 					// Outlet filter ran on backend — sync in-memory state
 					const outletMessages = data.messages ?? [];
@@ -4240,6 +4251,12 @@
 		</div>
 	{/if}
 </div>
+
+<EmojiRatingPopup
+	show={$emojiPopup.show}
+	onSubmit={$emojiPopup.onSubmit ?? (() => {})}
+	onDismiss={() => emojiPopup.close()}
+/>
 
 <style>
 	::-webkit-scrollbar {

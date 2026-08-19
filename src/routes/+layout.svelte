@@ -540,7 +540,7 @@
 
 			if ($isLastActiveTab) {
 				if ($settings?.notificationEnabled ?? false) {
-					new Notification(`${data.title} / Open WebUI`, {
+					new Notification(`${data.title} / O&M Agent`, {
 						body: timeStr,
 						icon: `${WEBUI_BASE_URL}/static/favicon.png`
 					});
@@ -675,7 +675,7 @@
 
 					if ($isLastActiveTab) {
 						if ($settings?.notificationEnabled ?? false) {
-							new Notification(`${displayTitle} / Open WebUI`, {
+							new Notification(`${displayTitle} / O&M Agent`, {
 								body: contentPreview,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
@@ -782,7 +782,7 @@
 
 				if ($isLastActiveTab) {
 					if ($settings?.notificationEnabled ?? false) {
-						new Notification(`${title} / Open WebUI`, {
+						new Notification(`${title} / O&M Agent`, {
 							body: data?.content,
 							icon: `${WEBUI_API_BASE_URL}/users/${data?.user?.id}/profile/image`
 						});
@@ -1353,6 +1353,20 @@
 		classes: {
 			closeButton:
 				'!bg-white/80 !text-gray-500 !border-gray-200 hover:!bg-gray-50 hover:!text-gray-700 dark:!bg-gray-850 dark:!text-gray-400 dark:!border-gray-700 dark:hover:!bg-gray-800 dark:hover:!text-gray-200'
-		}
+		},
 	}}
 />
+
+<style>
+	:global([data-sonner-toaster] [data-type="success"]) {
+		background: #003877 !important;
+		border-color: #002a63 !important;
+		color: #ffffff !important;
+	}
+	:global([data-sonner-toaster] [data-type="success"] [data-icon]) {
+		color: #ffffff !important;
+	}
+	:global([data-sonner-toaster] [data-type="success"] [data-title]) {
+		color: #ffffff !important;
+	}
+</style>

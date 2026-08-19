@@ -6,12 +6,16 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
 	server: {
 		proxy: {
-			'/api': 'http://localhost:3000',
-			'/uploads': 'http://localhost:3000',
-			'/static': 'http://localhost:3000',
-			'/ollama': 'http://localhost:3000',
-			'/openai': 'http://localhost:3000',
-			'/ws': { target: 'ws://localhost:3000', ws: true }
+			'/api': { target: 'http://localhost:3000', changeOrigin: true },
+			'/uploads': { target: 'http://localhost:3000', changeOrigin: true },
+			'/static': { target: 'http://localhost:3000', changeOrigin: true },
+			'/ollama': { target: 'http://localhost:3000', changeOrigin: true },
+			'/openai': { target: 'http://localhost:3000', changeOrigin: true },
+			'/oauth': { target: 'http://localhost:3000', changeOrigin: true },
+			'/images': { target: 'http://localhost:3000', changeOrigin: true },
+			'/audio': { target: 'http://localhost:3000', changeOrigin: true },
+			'/rag': { target: 'http://localhost:3000', changeOrigin: true },
+			'/ws': { target: 'ws://localhost:3000', ws: true, changeOrigin: true }
 		}
 	},
 	plugins: [

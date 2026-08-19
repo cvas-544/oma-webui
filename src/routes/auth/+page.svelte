@@ -7,7 +7,7 @@
 	import { getBackendConfig } from '$lib/apis';
 	import { getSessionUser, userSignIn, updateUserTimezone } from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 	import { getUserTimezone } from '$lib/utils';
 
@@ -16,6 +16,7 @@
 	const i18n = getContext('i18n');
 
 	let loaded = false;
+	let dropdownOpen = false;
 
 	const bgImages = [
 		'/oma-login-bg-01.png',
@@ -90,9 +91,24 @@
 		await setSessionUser(sessionUser, localStorage.getItem('redirectPath') || null);
 	};
 
+	function selectTool(tool) {
+		selectedTool = tool;
+		dropdownOpen = false;
+		try {
+			localStorage.setItem('oma_selected_tool', tool.id);
+		} catch (e) {}
+	}
+
 	function handleMicrosoftLogin() {
 		localStorage.setItem('oma_selected_tool', selectedTool.id);
 		window.location.href = `${WEBUI_BASE_URL}/oauth/microsoft/login`;
+	}
+
+	function handleClickOutside(e) {
+		const el = document.getElementById('tool-selector');
+		if (el && !el.contains(e.target)) {
+			dropdownOpen = false;
+		}
 	}
 
 	onMount(async () => {
@@ -111,6 +127,12 @@
 		}
 
 		await oauthCallbackHandler();
+
+		const saved = localStorage.getItem('oma_selected_tool');
+		if (saved) {
+			const found = tools.find((t) => t.id === saved);
+			if (found) selectedTool = found;
+		}
 
 		loaded = true;
 
@@ -132,6 +154,8 @@
 	<title>{`${$WEBUI_NAME}`}</title>
 </svelte:head>
 
+<svelte:window on:click={handleClickOutside} />
+
 <div class="oma-login-viewport" id="auth-page">
 	<!-- Background carousel -->
 	{#each bgImages as src, i}
@@ -140,18 +164,6 @@
 		</div>
 	{/each}
 	<div class="oma-bg-overlay" />
-
-	<!-- Dot indicators -->
-	<div class="oma-dots">
-		{#each bgImages as _, i}
-			<button
-				class="oma-dot"
-				class:active={currentBg === i}
-				on:click={() => { currentBg = i; clearInterval(bgInterval); bgInterval = setInterval(() => { currentBg = (currentBg + 1) % bgImages.length; }, 10000); }}
-				aria-label="Background {i + 1}"
-			/>
-		{/each}
-	</div>
 
 	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region" />
 
@@ -172,24 +184,60 @@
 						alt="Enerparc"
 						class="h-10 mb-3"
 					/>
-					<div class="text-xs tracking-widest uppercase" style="color: #6b7280;">AI Tools Platform</div>
+					<div class="text-xs text-gray-500 tracking-widest uppercase">AI Tools Platform</div>
 				</div>
 
-				<!-- Tool selector (static — single tool, dropdown disabled) -->
+				<!-- Tool selector -->
 				<div class="flex flex-col">
-					<div class="text-sm font-normal text-left mb-1.5" style="color: #374151;">Select your AI tool</div>
-					<div class="flex items-center gap-3 w-full my-0.5 text-sm rounded-xl px-3.5 py-2.5" style="background: rgba(55, 65, 81, 0.05);">
-						<div class="flex-1 text-left">
-							<div class="text-sm font-normal" style="color: #111827;">{selectedTool.name}</div>
-							<div class="text-xs" style="color: #6b7280;">{selectedTool.desc}</div>
-						</div>
-						<svg class="w-4 h-4" style="color: #9ca3af;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-							<polyline points="6 9 12 15 18 9" />
-						</svg>
+					<label class="text-sm font-normal text-left mb-1.5 block text-gray-700 dark:text-gray-300" for="tool-selector-btn">Select your AI tool</label>
+					<div class="oma-tool-selector relative" id="tool-selector" class:open={dropdownOpen}>
+						<button
+							class="flex items-center gap-3 w-full my-0.5 text-sm outline-hidden bg-gray-700/5 dark:bg-gray-100/5 rounded-xl px-3.5 py-2.5 transition hover:bg-gray-700/10 dark:hover:bg-gray-100/10"
+							id="tool-selector-btn"
+							type="button"
+							aria-expanded={dropdownOpen}
+							aria-haspopup="listbox"
+							on:click|stopPropagation={() => (dropdownOpen = !dropdownOpen)}
+						>
+							<div class="flex-1 text-left">
+								<div class="text-sm font-normal text-gray-900 dark:text-gray-100">{selectedTool.name}</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400">{selectedTool.desc}</div>
+							</div>
+							<svg class="w-4 h-4 text-gray-400 transition-transform" class:rotate-180={dropdownOpen} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+								<polyline points="6 9 12 15 18 9" />
+							</svg>
+						</button>
+
+						{#if dropdownOpen}
+							<div class="absolute top-full left-0 right-0 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl mt-1 shadow-lg z-10 overflow-hidden" role="listbox">
+								{#each tools as tool}
+									<button
+										class="flex items-center gap-3 w-full px-3.5 py-2.5 text-left transition"
+										class:bg-gray-100={selectedTool.id === tool.id}
+										class:dark:bg-gray-800={selectedTool.id === tool.id}
+										class:hover:bg-gray-50={selectedTool.id !== tool.id}
+										class:dark:hover:bg-gray-800={selectedTool.id !== tool.id}
+										role="option"
+										aria-selected={selectedTool.id === tool.id}
+										on:click|stopPropagation={() => selectTool(tool)}
+									>
+										<div class="flex-1">
+											<div class="text-sm font-normal text-gray-900 dark:text-gray-100">{tool.name}</div>
+											<div class="text-xs text-gray-500 dark:text-gray-400">{tool.desc}</div>
+										</div>
+										{#if selectedTool.id === tool.id}
+											<svg class="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{/if}
 					</div>
 				</div>
 
-				<div class="my-6" style="border-top: 1px solid #f0f0f0;"></div>
+				<div class="my-6 border-t border-gray-200 dark:border-gray-700"></div>
 
 				<!-- Microsoft button -->
 				<div class="mt-0 flex justify-center">
@@ -206,7 +254,7 @@
 					</button>
 				</div>
 
-				<div class="mt-6 text-center text-xs" style="color: #9ca3af;">
+				<div class="mt-4 text-center text-xs text-gray-400">
 					Secured by Azure AD &middot; Enerparc AG
 				</div>
 			</div>
@@ -268,32 +316,6 @@
 		box-shadow:
 			0 4px 6px rgba(0, 0, 0, 0.04),
 			0 20px 50px rgba(12, 35, 64, 0.18);
-	}
-
-	.oma-dots {
-		position: absolute;
-		bottom: 24px;
-		left: 50%;
-		transform: translateX(-50%);
-		display: flex;
-		gap: 8px;
-		z-index: 4;
-	}
-
-	.oma-dot {
-		height: 8px;
-		width: 8px;
-		border-radius: 9999px;
-		border: none;
-		padding: 0;
-		cursor: pointer;
-		background: rgba(255, 255, 255, 0.4);
-		transition: all 0.3s ease;
-	}
-
-	.oma-dot.active {
-		width: 24px;
-		background: #ffffff;
 	}
 
 	.oma-ms-btn {
