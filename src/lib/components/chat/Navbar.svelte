@@ -23,7 +23,7 @@
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
-	import ThemeSwitcher from '../common/ThemeSwitcher.svelte';
+	import QuickSettingsMenu from '$lib/components/chat/QuickSettingsMenu.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Banner from '../common/Banner.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
@@ -121,8 +121,8 @@
 					{/if}
 				</div>
 
-				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400 py-1 pr-0.5">
-					<ThemeSwitcher />
+				<div class="self-start flex flex-none items-center py-1 pr-0.5">
+					<QuickSettingsMenu />
 				</div>
 			</div>
 		</div>

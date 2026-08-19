@@ -157,3 +157,39 @@ Periodic, bottom-right feedback card. Appears after 8 s on first load (≥7 days
 - Wire answers to `/v1/survey` backend endpoint with `userId` from JWT
 - Persist responses in S3 bucket (same bucket used for traces and report artifacts) as JSON objects keyed by `userId/survey/<timestamp>.json`
 - Revert `SHOW_DELAY_MS` from `2000` → `8000` before production deploy
+
+---
+
+## Phase 6 — Quick Settings Menu (Navbar top-right)
+
+**Commit:** *(this phase)*
+
+Replaced the `ThemeSwitcher` pill in the Navbar top-right with a fluid circular quick-settings menu. Single trigger circle expands downward revealing 4 action items with `cubic-bezier(0.4,0,0.2,1)` slide + opacity transitions and `clip-path: circle()` layering (ported from React reference).
+
+### New files
+| File | Purpose |
+|---|---|
+| `src/lib/components/chat/QuickSettingsMenu.svelte` | Self-contained fluid menu — trigger + 4 items, theme logic, logout, navigation |
+
+### Modified files
+| File | What changed |
+|---|---|
+| `src/lib/components/chat/Navbar.svelte` | `ThemeSwitcher` replaced with `QuickSettingsMenu` |
+
+### Menu items (top → bottom when expanded)
+| Icon | Source | Action |
+|---|---|---|
+| `Bars3BottomLeft` (trigger) → `XMark` | `icons/` | Toggle expand / collapse |
+| `ChatBubble` | `icons/` | Open feedback form (Phase 7 — TODO) |
+| Moon / Sun | Inline SVG | Toggle dark ↔ light theme. Shows opposite of current: moon in light mode, sun in dark mode |
+| `SignOut` | `icons/` | Logout — `userSignOut()` → clear token → redirect `/auth` |
+| `Cog6` | `icons/` | Navigate to `/settings` |
+
+### Design details
+- Trigger: `w-9 h-9` (36px) circle, `bg-gray-100 dark:bg-gray-800`
+- All icons `size-4` (16px)
+- Items spaced 40px apart vertically; 4 items = 160px total drop
+- Logout hover: `red-500` — visually distinct from other items
+- Others hover: `#003877` light / `#73B2F2` dark (Enerparc brand)
+- Click-outside backdrop (`z-[39]`) closes the menu
+- All icon components from `src/lib/components/icons/` except moon/sun (no equivalent in library)
