@@ -106,3 +106,54 @@ All brand files replaced in `static/`. Drop-in replacements — filenames kept i
 | `user_feedback` | +1 / -1 | — |
 | `user_feedback_detail` | 1–4 (emoji) | `"Wrong Data, Wrong Time Period — optional text"` |
 | `feedback_categories` | 1 | `"Wrong Data, Wrong Time Period"` |
+
+---
+
+## Phase 5 — Weekly Survey Widget
+
+**Commit:** *(this phase)*
+
+Periodic, bottom-right feedback card. Appears after 8 s on first load (≥7 days since last completion, ≥3 days since snooze). Fixed `320×400 px` shell — content slides inside; card never resizes between stages.
+
+### Stages
+| Stage | Description |
+|---|---|
+| **Invite** | Full-bleed background image + dark-blue gradient overlay. Headline, "Take a Survey" CTA, "Remind me later" snooze |
+| **Questions** | White card, animated progress dots, four questions in sequence |
+| **Thank you** | Personalised with first name (`$user?.name`), auto-dismisses after 2.8 s |
+
+### Question types implemented
+| Type | Description |
+|---|---|
+| `stars` | 5-star tap row with hover highlight, stored as 1–5 |
+| `choice` | Single-select radio-style buttons |
+| `slider` | Range input with gradient fill track, large numeric readout, min/max labels |
+| `text` | Free-text textarea, skippable |
+
+### New files
+| File | Purpose |
+|---|---|
+| `src/lib/components/chat/WeeklySurvey.svelte` | Full widget — invite → questions → thank you stages, all question types, localStorage scheduling |
+
+### Modified files
+| File | What changed |
+|---|---|
+| `src/routes/+layout.svelte` | `WeeklySurvey` imported and mounted just before `<Toaster>` |
+
+### LocalStorage keys
+| Key | Set when |
+|---|---|
+| `inv_survey_last_shown` | Widget shown (on `onMount` timer fire) |
+| `inv_survey_last_completed` | User submits all questions |
+| `inv_survey_dismissed_at` | User clicks "Remind me later" |
+
+### Design details
+- Background rotates between `/oma-login-bg-01.png` and `/oma-login-bg-03.png` (bg-02 excluded — too light, text illegible)
+- Gradient overlay: `rgba(0,56,119,0.25) → rgba(0,56,119,0.92)` bottom-weighted
+- Brand colours: `#003877` (Enerparc dark blue) throughout; slider thumb, stars, progress dots, CTA button
+- Question transitions: `fly` with directional `x` offset, clipped inside a `relative overflow-hidden` wrapper so old + new questions don't stack
+
+### Pending (next sprint)
+- Wire answers to `/v1/survey` backend endpoint with `userId` from JWT
+- Persist responses in new `survey_responses` table (S3-backed or Postgres)
+- Revert `SHOW_DELAY_MS` from `2000` → `8000` before production deploy
