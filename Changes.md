@@ -155,5 +155,5 @@ Periodic, bottom-right feedback card. Appears after 8 s on first load (≥7 days
 
 ### Pending (next sprint)
 - Wire answers to `/v1/survey` backend endpoint with `userId` from JWT
-- Persist responses in new `survey_responses` table (S3-backed or Postgres)
+- Persist responses in S3 bucket (same bucket used for traces and report artifacts) as JSON objects keyed by `userId/survey/<timestamp>.json`
 - Revert `SHOW_DELAY_MS` from `2000` → `8000` before production deploy
