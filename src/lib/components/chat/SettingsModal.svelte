@@ -978,18 +978,21 @@
 							<span>{$i18n.t('Notifications')}</span>
 						</button>
 					{:else if tabId === 'shortcuts'}
-						<button
-							role="tab"
-							aria-controls="tab-shortcuts"
-							aria-selected={selectedTab === 'shortcuts'}
-							class={tabButtonClass(selectedTab === 'shortcuts')}
-							on:click={() => {
-								selectedTab = 'shortcuts';
-							}}
-						>
-							<Keyboard className="size-3.5" strokeWidth="2" />
-							<span>{$i18n.t('Keyboard')}</span>
-						</button>
+						<!-- OMA: user-hidden — Keyboard shortcuts tab is admin-only in v1 -->
+						{#if $user?.role === 'admin'}
+							<button
+								role="tab"
+								aria-controls="tab-shortcuts"
+								aria-selected={selectedTab === 'shortcuts'}
+								class={tabButtonClass(selectedTab === 'shortcuts')}
+								on:click={() => {
+									selectedTab = 'shortcuts';
+								}}
+							>
+								<Keyboard className="size-3.5" strokeWidth="2" />
+								<span>{$i18n.t('Keyboard')}</span>
+							</button>
+						{/if}
 					{:else if tabId === 'connections'}
 						{#if $user?.role === 'admin' || ($user?.role === 'user' && $config?.features?.enable_direct_connections)}
 							<button
@@ -1175,7 +1178,7 @@
 				/>
 			{:else if selectedTab === 'notifications'}
 				<Notifications {saveSettings} />
-			{:else if selectedTab === 'shortcuts'}
+			{:else if selectedTab === 'shortcuts' && $user?.role === 'admin'}
 				<Shortcuts {saveSettings} />
 			{:else if selectedTab === 'connections'}
 				<Connections
