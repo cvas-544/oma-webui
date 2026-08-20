@@ -455,6 +455,8 @@
 				</p>
 			</div>
 
+			<!-- OMA: user-hidden — admin-only Interface toggles in v1 -->
+			{#if $user?.role === 'admin'}
 			<div>
 				<div class={settingRowClass}>
 					<div id="use-chat-title-as-tab-title-label" class={settingLabelClass}>
@@ -518,6 +520,7 @@
 					{$i18n.t('Use device vibration feedback on supported Android devices.')}
 				</p>
 			</div>
+			{/if}
 
 			<div>
 				<div class={settingRowClass}>
@@ -589,6 +592,8 @@
 
 			<div class={sectionHeadingClass}>{$i18n.t('Chat')}</div>
 
+			<!-- OMA: user-hidden — admin-only Interface toggles in v1 -->
+			{#if $user?.role === 'admin'}
 			<div>
 				<div class={settingRowClass}>
 					<div id="enable-message-queue-label" class={settingLabelClass}>
@@ -689,6 +694,7 @@
 					{$i18n.t('Upload or reset the image shown behind chat content.')}
 				</p>
 			</div>
+			{/if}
 
 			<div>
 				<div class={settingRowClass}>
@@ -736,6 +742,8 @@
 				</div>
 			{/if}
 
+			<!-- OMA: user-hidden — Widescreen Mode admin-only in v1 -->
+			{#if $user?.role === 'admin'}
 			<div>
 				<div class={settingRowClass}>
 					<div id="widescreen-mode-label" class={settingLabelClass}>
@@ -757,8 +765,10 @@
 					{$i18n.t('Use a wider chat layout on large displays.')}
 				</p>
 			</div>
+			{/if}
 
-			{#if $user.role === 'admin' || $user?.permissions?.chat?.temporary}
+			<!-- OMA: user-hidden — Temporary Chat by Default admin-only in v1 -->
+			{#if $user?.role === 'admin'}
 				<div>
 					<div class={settingRowClass}>
 						<div id="temp-chat-default-label" class={settingLabelClass}>
@@ -804,6 +814,8 @@
 				</p>
 			</div>
 
+			<!-- OMA: user-hidden — admin-only Interface toggles in v1 -->
+			{#if $user?.role === 'admin'}
 			<div>
 				<div class={settingRowClass}>
 					<div id="render-markdown-user-label" class={settingLabelClass}>
@@ -1133,6 +1145,7 @@
 					{$i18n.t('Group multi-model responses into tabs.')}
 				</p>
 			</div>
+			{/if}
 
 			<div>
 				<div class={settingRowClass}>
@@ -1156,6 +1169,8 @@
 				</p>
 			</div>
 
+			<!-- OMA: user-hidden — admin-only Interface toggles in v1 -->
+			{#if $user?.role === 'admin'}
 			<div>
 				<div class={settingRowClass}>
 					<div id="show-files-on-terminal-select-label" class={settingLabelClass}>
@@ -1601,6 +1616,7 @@
 						{$i18n.t('Apply image compression to channel uploads too.')}
 					</p>
 				</div>
+			{/if}
 			{/if}
 		</div>
 	</div>
