@@ -252,7 +252,8 @@
 			{/if}
 		</UserSettingSection>
 
-		{#if $user?.role === 'admin' || (($user?.permissions.chat?.controls ?? true) && ($user?.permissions.chat?.system_prompt ?? true))}
+		<!-- OMA: user-hidden — System Prompt is admin-only in v1 (agent-driven) -->
+		{#if $user?.role === 'admin'}
 			<UserSettingSection title={$i18n.t('System Prompt')}>
 				<UserSettingField description={$i18n.t('Set the default system prompt for new chats.')}>
 					<Textarea
@@ -265,7 +266,8 @@
 			</UserSettingSection>
 		{/if}
 
-		{#if $user?.role === 'admin' || (($user?.permissions.chat?.controls ?? true) && ($user?.permissions.chat?.params ?? true))}
+		<!-- OMA: user-hidden — Advanced Parameters admin-only in v1 (LLM params) -->
+		{#if $user?.role === 'admin'}
 			<UserSettingSection title={$i18n.t('Advanced Parameters')}>
 				<UserSettingRow description={$i18n.t('Show or hide custom generation parameters.')}>
 					<span slot="label">{$i18n.t('Model parameters')}</span>
