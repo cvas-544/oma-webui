@@ -1009,7 +1009,8 @@
 							</button>
 						{/if}
 					{:else if tabId === 'tools'}
-						{#if $user?.role === 'admin' || ($user?.role === 'user' && $user?.permissions?.features?.direct_tool_servers)}
+						<!-- OMA: user-hidden — Integrations tab is admin-only in v1 -->
+						{#if $user?.role === 'admin'}
 							<button
 								role="tab"
 								aria-controls="tab-tools"
@@ -1187,7 +1188,7 @@
 						toast.success($i18n.t('Settings saved successfully!'));
 					}}
 				/>
-			{:else if selectedTab === 'tools'}
+			{:else if selectedTab === 'tools' && $user?.role === 'admin'}
 				<Integrations
 					saveSettings={async (updated: Record<string, any>) => {
 						await saveSettings(updated);
