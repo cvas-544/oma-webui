@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getAllTags } from '$lib/apis/chats';
-	import { folders, tags } from '$lib/stores';
+	import { tags } from '$lib/stores';
 	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Search from './icons/Search.svelte';
@@ -22,26 +22,11 @@
 	let lastWord = '';
 	$: lastWord = value ? value.split(' ').at(-1) : value;
 
+	// OMA: stripped folder/pinned/shared/archived — not used in O&M workflow
 	let options = [
 		{
 			name: 'tag:',
 			description: $i18n.t('search for tags')
-		},
-		{
-			name: 'folder:',
-			description: $i18n.t('search for folders')
-		},
-		{
-			name: 'pinned:',
-			description: $i18n.t('search for pinned chats')
-		},
-		{
-			name: 'shared:',
-			description: $i18n.t('search for shared chats')
-		},
-		{
-			name: 'archived:',
-			description: $i18n.t('search for archived chats')
 		}
 	];
 	let focused = false;
@@ -94,90 +79,6 @@
 						type: 'tag'
 					};
 				});
-		} else if (lastWord.startsWith('folder:')) {
-			filteredItems = [...$folders]
-				.filter((folder) => {
-					const folderName = lastWord.slice(7);
-					if (folderName) {
-						const id = folder.name.replaceAll(' ', '_').toLowerCase();
-						const folderId = folderName.replaceAll(' ', '_').toLowerCase();
-
-						if (id !== folderId) {
-							return id.startsWith(folderId);
-						} else {
-							return false;
-						}
-					} else {
-						return true;
-					}
-				})
-				.map((folder) => {
-					return {
-						id: folder.name.replaceAll(' ', '_').toLowerCase(),
-						name: folder.name,
-						type: 'folder'
-					};
-				});
-		} else if (lastWord.startsWith('pinned:')) {
-			filteredItems = [
-				{
-					id: 'true',
-					name: 'true',
-					type: 'pinned'
-				},
-				{
-					id: 'false',
-					name: 'false',
-					type: 'pinned'
-				}
-			].filter((item) => {
-				const pinnedValue = lastWord.slice(7);
-				if (pinnedValue) {
-					return item.id.startsWith(pinnedValue) && item.id !== pinnedValue;
-				} else {
-					return true;
-				}
-			});
-		} else if (lastWord.startsWith('shared:')) {
-			filteredItems = [
-				{
-					id: 'true',
-					name: 'true',
-					type: 'shared'
-				},
-				{
-					id: 'false',
-					name: 'false',
-					type: 'shared'
-				}
-			].filter((item) => {
-				const sharedValue = lastWord.slice(7);
-				if (sharedValue) {
-					return item.id.startsWith(sharedValue) && item.id !== sharedValue;
-				} else {
-					return true;
-				}
-			});
-		} else if (lastWord.startsWith('archived:')) {
-			filteredItems = [
-				{
-					id: 'true',
-					name: 'true',
-					type: 'archived'
-				},
-				{
-					id: 'false',
-					name: 'false',
-					type: 'archived'
-				}
-			].filter((item) => {
-				const archivedValue = lastWord.slice(9);
-				if (archivedValue) {
-					return item.id.startsWith(archivedValue) && item.id !== archivedValue;
-				} else {
-					return true;
-				}
-			});
 		} else {
 			filteredItems = [];
 		}

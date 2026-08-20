@@ -39,11 +39,48 @@
 	import ArchiveBox from '../icons/ArchiveBox.svelte';
 	import GarbageBin from '../icons/GarbageBin.svelte';
 	import { generateTitle } from '$lib/apis';
+	import { artifacts, loadImageBlob, type ArtifactItem } from '$lib/stores/artifacts';
 	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);
 
 	export let show = false;
 	export let onClose = () => {};
+
+	// OMA: tab state for search filter
+	let activeTab: 'chats' | 'images' | 'files' = 'chats';
+	let selectedArtifact: ArtifactItem | null = null;
+	let artifactImageSrc: string | null = null;
+
+	$: filteredArtifacts = $artifacts
+		.filter((a) => (activeTab === 'images' ? a.type === 'image' : a.type === 'document'))
+		.filter((a) => !query.trim() || a.name.toLowerCase().includes(query.toLowerCase().trim()));
+
+	$: if (selectedArtifact?.type === 'image') {
+		loadImageBlob(selectedArtifact.id).then((src) => { artifactImageSrc = src; });
+	} else {
+		artifactImageSrc = null;
+	}
+
+	const downloadArtifact = async (artifact: ArtifactItem) => {
+		if (artifact.type === 'document' && artifact.url) {
+			const a = document.createElement('a');
+			a.href = artifact.url;
+			a.download = artifact.name;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+		} else if (artifact.type === 'image') {
+			const src = await loadImageBlob(artifact.id);
+			if (src) {
+				const a = document.createElement('a');
+				a.href = src;
+				a.download = artifact.name;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+			}
+		}
+	};
 
 	let showShareChatModal = false;
 	let showDeleteConfirm = false;
@@ -596,42 +633,39 @@
 			/>
 		</div>
 
+		<!-- OMA: filter tabs — Chats / Artifact Images / Artifact Files -->
+		<div class="flex gap-1.5 px-3.5 pb-2 pt-1">
+			{#each [
+				{ id: 'chats', label: $i18n.t('Chats') },
+				{ id: 'images', label: $i18n.t('Images') },
+				{ id: 'files', label: $i18n.t('Files') }
+			] as tab}
+				<button
+					class="px-3 py-1 rounded-full text-xs font-medium transition-colors
+						{activeTab === tab.id
+							? 'bg-[#003877] text-white'
+							: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'}"
+					on:click={() => {
+						activeTab = tab.id;
+						selectedArtifact = null;
+						selectedChat = null;
+						messages = null;
+					}}
+				>
+					{tab.label}
+				</button>
+			{/each}
+		</div>
+
 		<div class="flex px-3.5 pb-0.5">
 			<div
 				class="flex flex-col overflow-y-auto h-96 md:h-[40rem] max-h-full scrollbar-hidden w-full flex-1 pr-2"
 			>
-				<div class="w-full text-xs text-gray-500 dark:text-gray-500 font-normal pb-2 px-2">
-					{$i18n.t('Actions')}
-				</div>
+				<!-- OMA: disabled — Actions section (Start new conversation / Create note) not needed for O&M users -->
 
-				{#each actions as action, idx (action.label)}
-					<button
-						class="w-full flex items-center rounded-lg text-sm py-1.5 px-2.5 hover:bg-gray-50/70 dark:hover:bg-gray-850/50 {selectedIdx ===
-						idx
-							? 'bg-gray-50/70 dark:bg-gray-850/50'
-							: ''}"
-						data-arrow-selected={selectedIdx === idx ? 'true' : undefined}
-						draggable="false"
-						on:mouseenter={() => {
-							selectedIdx = idx;
-						}}
-						on:click={async () => {
-							await action.onClick();
-						}}
-					>
-						<div class="pr-2">
-							<svelte:component this={action.icon} />
-						</div>
-						<div class=" flex-1 text-left">
-							<div class="text-ellipsis line-clamp-1 w-full">
-								{$i18n.t(action.label)}
-							</div>
-						</div>
-					</button>
-				{/each}
-
+				{#if activeTab === 'chats'}
 				{#if chatList}
-					<div aria-hidden="true" class="h-px my-3" />
+					<div aria-hidden="true" class="h-px my-3"></div>
 
 					{#if chatList.length === 0}
 						<div class="text-xs text-gray-500 dark:text-gray-400 text-center px-5 py-4">
@@ -869,7 +903,56 @@
 						<Spinner className="size-5" />
 					</div>
 				{/if}
+				<!-- end chats tab -->
+				{:else}
+				<!-- OMA: artifact results (images / files) -->
+				{#if filteredArtifacts.length === 0}
+					<div class="text-xs text-gray-500 dark:text-gray-400 text-center px-5 py-4">
+						{$i18n.t('No results found')}
+					</div>
+				{:else}
+					<div class="w-full text-xs text-gray-500 dark:text-gray-500 font-normal pb-2 px-2">
+						{activeTab === 'images' ? $i18n.t('Images') : $i18n.t('Files')}
+					</div>
+					{#each filteredArtifacts as artifact (artifact.id)}
+						<button
+							class="w-full flex items-center gap-3 rounded-lg text-sm py-2 px-2.5 text-left
+								hover:bg-gray-50/70 dark:hover:bg-gray-850/50
+								{selectedArtifact?.id === artifact.id ? 'bg-gray-50/70 dark:bg-gray-850/50' : ''}"
+							on:click={() => { selectedArtifact = artifact; }}
+						>
+							<!-- icon -->
+							<div class="shrink-0 text-gray-400 dark:text-gray-500">
+								{#if artifact.type === 'image'}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3 9.75h.008v.008H3V9.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM6.375 6h11.25A2.625 2.625 0 0120.25 8.625v6.75A2.625 2.625 0 0117.625 18H6.375A2.625 2.625 0 013.75 15.375v-6.75A2.625 2.625 0 016.375 6z" />
+									</svg>
+								{:else if artifact.ext === 'pdf'}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+									</svg>
+								{:else}
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-1.5A1.125 1.125 0 0118 18.375M5.625 4.5h12.75a1.125 1.125 0 011.125 1.125v9c0 .621-.504 1.125-1.125 1.125H5.625a1.125 1.125 0 01-1.125-1.125v-9A1.125 1.125 0 015.625 4.5z" />
+									</svg>
+								{/if}
+							</div>
+							<div class="flex-1 min-w-0">
+								<div class="text-ellipsis line-clamp-1 text-gray-800 dark:text-gray-200">
+									{artifact.name}
+								</div>
+								<div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+									{dayjs(artifact.ts).format('ll')}
+								</div>
+							</div>
+						</button>
+					{/each}
+				{/if}
+				{/if}
 			</div>
+
+			<!-- Right panel: chat preview (chats tab) OR artifact detail (image/file tabs) -->
+			{#if activeTab === 'chats'}
 			<div
 				id={messagesContainerId}
 				bind:this={messagesContainerElement}
@@ -900,6 +983,51 @@
 					</div>
 				{/if}
 			</div>
+			{:else}
+			<!-- OMA: artifact detail panel -->
+			<div class="hidden md:flex md:flex-1 w-full overflow-y-auto h-96 md:h-[40rem] scrollbar-hidden">
+				{#if selectedArtifact === null}
+					<div class="w-full h-full flex justify-center items-center text-gray-500 dark:text-gray-400 text-sm">
+						{$i18n.t('Select a file to preview')}
+					</div>
+				{:else}
+					<div class="w-full p-5 flex flex-col gap-4">
+						<!-- image thumbnail -->
+						{#if selectedArtifact.type === 'image' && artifactImageSrc}
+							<img
+								src={artifactImageSrc}
+								alt={selectedArtifact.name}
+								class="w-full max-h-52 object-contain rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900"
+							/>
+						{/if}
+						<!-- file info -->
+						<div class="flex flex-col gap-3">
+							<div class="font-medium text-sm text-gray-800 dark:text-gray-200 break-all">
+								{selectedArtifact.name}
+							</div>
+							<div class="flex items-center gap-2 flex-wrap">
+								<span class="px-2 py-0.5 rounded text-xs font-semibold uppercase bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
+									{selectedArtifact.type === 'image' ? 'Image' : (selectedArtifact.ext?.toUpperCase() ?? 'File')}
+								</span>
+								<span class="text-xs text-gray-500 dark:text-gray-400">
+									{dayjs(selectedArtifact.ts).format('LL')}
+								</span>
+							</div>
+							<button
+								class="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg
+									bg-[#003877] hover:bg-[#002a63] text-white text-sm font-medium transition-colors"
+								on:click={() => downloadArtifact(selectedArtifact)}
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+								</svg>
+								{$i18n.t('Download')}
+							</button>
+						</div>
+					</div>
+				{/if}
+			</div>
+			{/if}
 		</div>
 	</div>
 </Modal>
