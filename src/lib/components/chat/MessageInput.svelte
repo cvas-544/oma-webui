@@ -1711,8 +1711,8 @@
 								</div>
 							{/if}
 
-							<!-- OMA: pl-10 for + button left, pr-12 so text doesn't overlap Send button right -->
-							<div class="px-2 pl-10 pr-12">
+							<!-- OMA: pl-14 clears the + button (left-2 + size-10 = 48px) with an 8px gap; pr-12 so text doesn't overlap Send button right -->
+							<div class="px-2 pl-14 pr-12">
 								<div
 									class="scrollbar-hidden rtl:text-right ltr:text-left bg-transparent dark:text-gray-100 outline-hidden w-full pb-3 px-1 resize-none h-fit max-h-96 overflow-auto text-base {files.length ===
 									0

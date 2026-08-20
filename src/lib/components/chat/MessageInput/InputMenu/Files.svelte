@@ -12,6 +12,7 @@
 	const i18n = getContext('i18n');
 
 	export let onSelect = (e) => {};
+	export let filter: 'all' | 'image' | 'file' = 'all';
 
 	let loaded = false;
 	let items = [];
@@ -108,7 +109,7 @@
 				<div class="text-center text-xs text-gray-500 py-3">{$i18n.t('No files found')}</div>
 			{:else}
 				<div class="flex flex-col gap-0.5">
-					{#each items as item, idx}
+					{#each items.filter((i) => filter === 'all' || i.type === filter) as item, idx}
 						<button
 							class=" h-[1.6875rem] px-2 rounded-xl w-full text-left flex justify-between items-center text-[13px] font-normal {idx ===
 							selectedIdx
