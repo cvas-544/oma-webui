@@ -1025,6 +1025,8 @@
 							</button>
 						{/if}
 					{:else if tabId === 'personalization'}
+						<!-- OMA: user-hidden — Personalization tab admin-only in v1 -->
+						{#if $user?.role === 'admin'}
 						<button
 							role="tab"
 							aria-controls="tab-personalization"
@@ -1037,7 +1039,10 @@
 							<Face className="size-3.5" strokeWidth="2" />
 							<span>{$i18n.t('Personalization')}</span>
 						</button>
+						{/if}
 					{:else if tabId === 'audio'}
+						<!-- OMA: user-hidden — Audio tab admin-only in v1 -->
+						{#if $user?.role === 'admin'}
 						<button
 							role="tab"
 							aria-controls="tab-audio"
@@ -1050,7 +1055,10 @@
 							<SoundHigh className="size-3.5" strokeWidth="2" />
 							<span>{$i18n.t('Audio')}</span>
 						</button>
+						{/if}
 					{:else if tabId === 'data_controls'}
+						<!-- OMA: user-hidden — Data Controls tab admin-only in v1 -->
+						{#if $user?.role === 'admin'}
 						<button
 							role="tab"
 							aria-controls="tab-data-controls"
@@ -1063,6 +1071,7 @@
 							<DatabaseSettings className="size-3.5" strokeWidth="2" />
 							<span>{$i18n.t('Data Controls')}</span>
 						</button>
+						{/if}
 					{:else if tabId === 'usage'}
 						<button
 							role="tab"
@@ -1195,21 +1204,21 @@
 						toast.success($i18n.t('Settings saved successfully!'));
 					}}
 				/>
-			{:else if selectedTab === 'personalization'}
+			{:else if selectedTab === 'personalization' && $user?.role === 'admin'}
 				<Personalization
 					{saveSettings}
 					on:save={() => {
 						toast.success($i18n.t('Settings saved successfully!'));
 					}}
 				/>
-			{:else if selectedTab === 'audio'}
+			{:else if selectedTab === 'audio' && $user?.role === 'admin'}
 				<Audio
 					{saveSettings}
 					on:save={() => {
 						toast.success($i18n.t('Settings saved successfully!'));
 					}}
 				/>
-			{:else if selectedTab === 'data_controls'}
+			{:else if selectedTab === 'data_controls' && $user?.role === 'admin'}
 				<DataControls {saveSettings} />
 			{:else if selectedTab === 'usage'}
 				<Usage />
