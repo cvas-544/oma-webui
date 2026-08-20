@@ -1711,13 +1711,14 @@
 								</div>
 							{/if}
 
-							<div class="px-2">
+							<!-- OMA: pl-10 for + button left, pr-12 so text doesn't overlap Send button right -->
+							<div class="px-2 pl-10 pr-12">
 								<div
-									class="scrollbar-hidden rtl:text-right ltr:text-left bg-transparent dark:text-gray-100 outline-hidden w-full pb-0.5 px-1 resize-none h-fit max-h-96 overflow-auto {files.length ===
+									class="scrollbar-hidden rtl:text-right ltr:text-left bg-transparent dark:text-gray-100 outline-hidden w-full pb-3 px-1 resize-none h-fit max-h-96 overflow-auto text-base {files.length ===
 									0
 										? atSelectedModel !== undefined
-											? 'pt-1'
-											: 'pt-2'
+											? 'pt-3'
+											: 'pt-4'
 										: ''}"
 									id="chat-input-container"
 								>
@@ -1907,8 +1908,11 @@
 								</div>
 							</div>
 
-							<div class=" flex justify-between mt-0.5 mb-2 mx-0.5 max-w-full" dir="ltr">
+							<!-- OMA: toolbar collapsed — + and Send are now absolute; keep for conditional tools (valves/filters) -->
+							<div class="flex justify-between h-0 overflow-visible mx-0.5" dir="ltr">
 								<div class="ml-1 self-end flex items-center flex-1 min-w-0">
+									<!-- OMA: absolute wrapper positions + button at top-left of input container -->
+									<div class="absolute left-2 top-1/2 -translate-y-1/2 z-10">
 									<InputMenu
 										bind:files
 										selectedModels={selectedModelIds}
@@ -1964,21 +1968,22 @@
 										<button
 											type="button"
 											id="input-menu-button"
-											class="bg-transparent hover:bg-gray-100 text-gray-700 dark:text-white dark:hover:bg-gray-800 rounded-full size-[1.875rem] flex justify-center items-center outline-hidden focus:outline-hidden shrink-0"
+											class="bg-transparent hover:bg-gray-100 text-gray-500 dark:text-gray-400 dark:hover:bg-gray-800 rounded-full size-10 flex justify-center items-center outline-hidden focus:outline-hidden shrink-0"
 											aria-label={$i18n.t('More')}
 										>
-											<PlusAlt className="size-5" />
+											<PlusAlt className="size-6" />
 										</button>
 									</InputMenu>
+									</div>
 
-									{#if showWebSearchButton || showImageGenerationButton || showCodeInterpreterButton || showToolsButton || showSkillsButton || (toggleFilters && toggleFilters.length > 0)}
-										<div
-											class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50 shrink-0"
-										/>
+									<!-- OMA: disabled — integrations divider; re-enable by restoring {#if} block below -->
+									{#if false}
+										<div class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50 shrink-0" />
 									{/if}
 
 									<div class="flex flex-1 items-center min-w-0 overflow-x-auto scrollbar-none">
-										{#if showWebSearchButton || showImageGenerationButton || showCodeInterpreterButton || showToolsButton || showSkillsButton || (toggleFilters && toggleFilters.length > 0)}
+										<!-- OMA: disabled — integrations menu; re-enable by changing {#if false} to original condition -->
+										{#if false}
 											<IntegrationsMenu
 												selectedModels={selectedModelIds}
 												{toggleFilters}
@@ -2235,8 +2240,13 @@
 									</div>
 								</div>
 
-								<div class="self-end flex space-x-1 mr-1 shrink-0 gap-[0.5px]">
-									<div class="flex min-w-0 max-w-[10rem] items-center sm:max-w-[13rem]">
+								<div class="absolute top-1/2 -translate-y-1/2 right-2 flex space-x-1 shrink-0 gap-[0.5px] z-10">
+									<!-- OMA: model name hidden — static, non-interactive, not needed visually -->
+									<div class="hidden">
+										<span class="text-[13px] font-normal text-gray-600 dark:text-gray-300 truncate">
+											{$models.find((m) => m.id === selectedModelIds[0])?.name ?? selectedModelIds[0] ?? ''}
+										</span>
+										<!-- OMA: disabled ModelSelector
 										<ModelSelector
 											bind:selectedModels
 											showSetDefault={!history?.currentId}
@@ -2244,6 +2254,7 @@
 											align="end"
 											triggerClassName="items-center gap-1.5 rounded-lg pl-2 pr-1.5 py-1 text-[13px] font-normal text-gray-600 transition-colors duration-100 hover:bg-gray-50/40 hover:text-gray-700 dark:text-gray-300 dark:hover:bg-gray-800/40 dark:hover:text-gray-200"
 										/>
+										-->
 									</div>
 
 									{#if hasChatVariables}
@@ -2289,7 +2300,8 @@
 										</div>
 									{:else}
 										{#if !history?.currentId || history.messages[history.currentId]?.done == true}
-											{#if $_user?.role === 'admin' || ($_user?.permissions?.chat?.stt ?? true)}
+											<!-- OMA: disabled — dictate (future feature); re-enable by restoring original {#if} condition -->
+											{#if false}
 												<!-- {$i18n.t('Record voice')} -->
 												<Tooltip content={$i18n.t('Dictate')}>
 													<button
@@ -2330,7 +2342,8 @@
 											{/if}
 										{/if}
 
-										{#if prompt === '' && files.length === 0 && ($_user?.role === 'admin' || ($_user?.permissions?.chat?.call ?? true))}
+										<!-- OMA: disabled — voice mode (future feature); re-enable by restoring original {#if} condition -->
+										{#if false && prompt === '' && files.length === 0}
 											<div class=" flex items-center">
 												<!-- {$i18n.t('Call')} -->
 												<Tooltip content={$i18n.t('Voice mode')}>
@@ -2403,19 +2416,19 @@
 													<button
 														id="send-message-button"
 														class="{!(prompt === '' && files.length === 0) || uploadPending
-															? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
-															: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-[5px] self-center"
+															? 'bg-[#003877] text-white hover:bg-[#002a63] '
+															: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-[7px] self-center"
 														type="submit"
 														disabled={(prompt === '' && files.length === 0) || uploadPending}
 													>
 														{#if uploadPending}
-															<Spinner className="size-5" />
+															<Spinner className="size-6" />
 														{:else}
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
 																viewBox="0 0 16 16"
 																fill="currentColor"
-																class="size-5"
+																class="size-6"
 															>
 																<path
 																	fill-rule="evenodd"

@@ -118,7 +118,7 @@
 		}
 	}}
 >
-	<Tooltip content={$i18n.t('More')}>
+	<Tooltip content={$i18n.t('More')} placement="top">
 		<slot />
 	</Tooltip>
 
