@@ -41,24 +41,109 @@ Both conventions follow `FORK-GUIDE.md` § Don'ts ("Comment them out with a `// 
 
 ---
 
+### 3. Home Page (Chat Input + Suggestions)
+**Files:**
+- `src/lib/components/chat/MessageInput.svelte` — **RED**
+- `src/lib/components/chat/MessageInput/InputMenu.svelte` — **RED**
+- Component containing Suggested prompts (likely `src/routes/(app)/+page.svelte` or `src/lib/components/chat/Suggestions.svelte`)
+
+**Screenshot:** `screenshots/annotated-03-home.png`
+**Confirmed by:** Vasu — 2026-08-20
+
+| Element | How to identify in code | Decision | Reason |
+|---|---|---|---|
+| ✦ Integrations icon (sparkle, left of input) | Button in input toolbar; `InputMenu` trigger with sparkle/plus-sparkle icon | **STRIP ✓** | No integrations in O&M v1 workflow |
+| Model selector (dropdown + chevron, right of input) | `<ModelSelector>` or inline model name button; `showModelSelector` prop | **MAKE STATIC ✓** | O&M users don't choose models — show name only, no dropdown |
+| Mic / Dictate button | Mic icon button; `VoiceRecording` or `startRecording` handler | **STRIP ✓** | Dictate = future feature |
+| Voice/waveform button | Waveform icon button right of mic; voice mode handler | **REPLACE → Send ✓** | Replace with Send icon (use OMA/OpenWebUI send icon); dictate+voice come later |
+| Suggested section (label + 3 generic prompts) | `{#each suggestions as suggestion}` or `<Suggestions>` component | **STRIP ✓** | Generic prompts irrelevant to O&M; replace with O&M-specific suggestions UI |
+
+**New O&M Suggestions UI** (replaces Suggested section):
+- Design TBD — will use O&M-relevant quick-start prompts (e.g., "Show me yesterday's generation report", "Summarise alarms for Plant X")
+- New component: `src/lib/components/chat/OmaSuggestions.svelte`
+- i18n wrapped; German primary
+
+**Strip strategy:** applies to **all users** (no role gate). Original code kept in `{#if false}` blocks or HTML comments — uncomment to re-enable for staging/production.
+
+**How implemented:**
+- Integrations menu + divider: `{#if false}` block in `MessageInput.svelte`
+- Dictate button: `{#if false}` block in `MessageInput.svelte`
+- Voice mode: `{#if false && ...}` → always falls through to Send button
+- Model selector: replaced with static `<span>` text; original `<ModelSelector />` in HTML comment
+- Suggestions: `<OmaSuggestions>` mounted unconditionally; original `<Suggestions>` in HTML comment
+- Send button: color changed from `bg-black` → `bg-[#003877]` (Enerparc blue)
+
+**Input field layout & sizing (implemented):**
+- Layout: `+` button and Send button are `absolute` inside `#message-input-container` (`relative`); text area uses `pl-10 pr-12` to leave room for both
+- `+` wrapper: `absolute left-2 top-1/2 -translate-y-1/2 z-10` — perfectly centered regardless of box height
+- Send wrapper: `absolute top-1/2 -translate-y-1/2 right-2` — same centering
+- Height ~30% taller: `#chat-input-container` uses `pt-4 pb-3` (was `pt-2 pb-0.5`); `text-base` explicit
+- `+` button: `size-10` (40 px), icon `size-6`; was `size-[1.875rem]`/`size-5`
+- Send button: `p-[7px]`, icon `size-6`; was `p-[5px]`/`size-5`
+- `InputMenu.svelte` tooltip placement changed to `"top"` to avoid inline text rendering bug
+
+**Risk:** RED files — wrap/comment only, no logic deletes.
+
+---
+
 ### 1. Sidebar
 **File:** `src/lib/components/layout/Sidebar.svelte` — **RED** (FORK-GUIDE § 2)
+**Screenshot:** `screenshots/annotated-01-sidebar.png`
+**Confirmed by:** Vasu — 2026-08-20
 
-| Element | How to identify in code | Strip / Keep | Reason |
+| Element | How to identify in code | Decision | Reason |
 |---|---|---|---|
-| Workspace section | `pinnedItems` includes `'workspace'`; rendered via `case 'workspace':` block and the pinned menu loop | **Strip** | Prompts / Tools / Functions / Models / Knowledge — all advanced; not needed in v1 |
-| Notes | `case 'notes':` block; `pinnedNotes`, `PinnedNoteList` | **Strip** | Not part of O&M workflow |
-| Channels | `showChannels`, `getChannels` import, channel list render block | **Strip** | No channels in OMA v1 |
-| Calendar | `case 'calendar':` block; `CalendarIcon` import | **Strip** | Not part of O&M workflow |
-| Automations | `case 'automations':` block | **Strip** | Developer feature — not for O&M users |
-| Playground | `case 'playground':` block | **Strip** | Developer feature — not for O&M users |
-| Folders | `Folders` component import; `showFolders`, `showCreateFolderModal` state; folder drag-and-drop handlers | **Strip** | Chat organisation unnecessary for v1; adds confusion |
-| Shared Folders | `SharedFolderItem` import; `sharedFolders` state; `getSharedFolders` call | **Strip** | Not needed in v1 |
-| Pinned Models list | `PinnedModelList` import; `showPinnedModels` state | **Strip** | Users don't choose models |
-| Archived chats link | Rendered via `$user?.permissions` check — already gated; confirm hidden | **Confirm** | Verify the permission gate already hides it for `user` role |
-| Temporary chat toggle | `temporaryChatEnabled` store; toggle button near new-chat area | **Strip** | Confusing for non-technical users |
+| Notes | `case 'notes':` block; `pinnedNotes`, `PinnedNoteList` | **STRIP ✓** | Not part of O&M workflow |
+| Workspace section | `pinnedItems` includes `'workspace'`; rendered via `case 'workspace':` block and the pinned menu loop | **STRIP ✓** | Prompts / Tools / Functions / Models / Knowledge — admin only |
+| Folders | `Folders` component import; `showFolders`, `showCreateFolderModal` state; folder drag-and-drop handlers | **STRIP ✓** | Unnecessary for v1; adds confusion |
+| Channels | `showChannels`, `getChannels` import, channel list render block | **STRIP** | No channels in OMA v1 |
+| Calendar | `case 'calendar':` block; `CalendarIcon` import | **STRIP** | Not part of O&M workflow |
+| Automations | `case 'automations':` block | **STRIP** | Developer feature — not for O&M users |
+| Playground | `case 'playground':` block | **STRIP** | Developer feature — not for O&M users |
+| Shared Folders | `SharedFolderItem` import; `sharedFolders` state; `getSharedFolders` call | **STRIP** | Not needed in v1 |
+| Pinned Models list | `PinnedModelList` import; `showPinnedModels` state | **STRIP** | Users don't choose models |
+| Temporary chat toggle | `temporaryChatEnabled` store; toggle button near new-chat area | **STRIP** | Confusing for non-technical users |
+| Archived chats link | Rendered via `$user?.permissions` check — already gated; confirm hidden | **CONFIRM** | Verify the permission gate already hides it for `user` role |
+| Enerparc logo | `<img src="/enerparc-logo.png">` at top of sidebar | **KEEP** | Brand identity |
+| New Chat button | Near top of sidebar | **KEEP** | Core action |
+| Search | Sidebar nav item | **KEEP** | Core action |
+| Artifacts section | Custom OMA store — `artifacts.ts` | **KEEP** | Core OMA feature |
+| Chats + history list | Session list render block | **KEEP** | Core feature |
 
-**Risk:** Sidebar.svelte is RED — any change here must be re-applied carefully on upstream upgrades. Keep each strip as a minimal `{#if}` wrap around the render block, not a logic removal.
+**How to implement:**
+```svelte
+{#if $user?.role !== 'user'}
+  <!-- wrap each STRIP block individually -->
+{/if}
+```
+Wrap each block separately — do not delete. One `{#if}` per element so upstream diffs stay clean.
+
+**Risk:** RED file — re-apply wraps carefully on upstream upgrades.
+
+---
+
+### 2. Search Modal
+**Files:** `src/lib/components/layout/SearchModal.svelte` — **YELLOW** · `src/lib/components/layout/Sidebar/SearchInput.svelte` — **RED**
+**Screenshot:** `screenshots/annotated-02-search.png`
+**Confirmed by:** Vasu — 2026-08-20
+**Status:** IMPLEMENTED ✓ (build clean, tested)
+
+| Element | How to identify in code | Decision | Reason |
+|---|---|---|---|
+| Actions section ("Start a new conversation", "Create a new note") | `{#each actions as action}` block + `actions[]` array | **STRIP ✓** | Not part of O&M workflow — users don't start meta-actions from search |
+| `folder:` filter prefix | `options[]` in `SearchInput.svelte`; `initItems` folder branch | **STRIP ✓** | Folders stripped from sidebar — filter is meaningless |
+| `pinned:` filter prefix | `options[]` + `initItems` pinned branch | **STRIP ✓** | Pinning not an O&M workflow |
+| `shared:` filter prefix | `options[]` + `initItems` shared branch | **STRIP ✓** | No sharing in v1 |
+| `archived:` filter prefix | `options[]` + `initItems` archived branch | **STRIP ✓** | Not exposed to users |
+| `tag:` filter prefix | `options[]` entry; `initItems` tag branch; reads `$tags` store | **KEEP ✓** | Tag search still useful for power users |
+| Search input | `<SearchInput bind:value={query}>` | **KEEP** | Core |
+| Chat results list | `{#each chatList as chat}` block | **KEEP** | Core |
+| Right preview panel (chat) | `<Messages>` component in right column | **KEEP** | Core |
+| Filter tabs (Chats / Images / Files) | NEW — `activeTab` state + tab bar | **ADDED ✓** | Replaces Actions; lets users filter by content type |
+| Artifact results list | NEW — `filteredArtifacts` from `$artifacts` store | **ADDED ✓** | Images and Files from S3-backed artifact store |
+| Artifact detail panel | NEW — right panel when `activeTab !== 'chats'` | **ADDED ✓** | Name, type badge, date, Download button; image thumbnail |
+
+**i18n:** All new strings wrapped with `$i18n.t()`. `"Select a file to preview"` added to `de-DE` (`"Datei zur Vorschau auswählen"`) and `en-US` locale files.
 
 ---
 
