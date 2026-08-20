@@ -139,7 +139,8 @@
 						</div>
 						<div class="self-center min-w-0 flex-1 truncate">{$user.name}</div>
 
-						{#if showActiveUsers && ($config?.features?.enable_public_active_users_count || role === 'admin') && usage?.user_count}
+						<!-- OMA: user-hidden — active-users badge is admin-only in v1 -->
+						{#if showActiveUsers && role === 'admin' && usage?.user_count}
 							<Tooltip
 								content={usage?.model_ids && usage?.model_ids.length > 0
 									? `${$i18n.t('Running')}: ${usage.model_ids.join(', ')} ✨`
@@ -162,7 +163,8 @@
 				</div>
 			{/if}
 
-			{#if profile}
+			<!-- OMA: user-hidden — status is admin-only in v1 -->
+			{#if profile && $user?.role === 'admin'}
 				{#if $user?.status_emoji || $user?.status_message}
 					<div class="user-menu-status">
 						<button
@@ -234,11 +236,12 @@
 				{/if}
 			{/if}
 
-			{#if profile}
+			{#if profile && $user?.role === 'admin'}
 				<hr class="border-gray-50/30 dark:border-gray-800/30 my-0.5 mx-1 p-0" />
 			{/if}
 
-			{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools || $user?.permissions?.workspace?.skills}
+			<!-- OMA: user-hidden — Workspace is admin-only in v1 -->
+			{#if $user?.role === 'admin'}
 				<div class="flex items-center w-full">
 					<a
 						href="/workspace"
@@ -282,7 +285,8 @@
 				</div>
 			{/if}
 
-			{#if ($config?.features?.enable_notes ?? false) && ($user?.role === 'admin' || ($user?.permissions?.features?.notes ?? true))}
+			<!-- OMA: user-hidden — Notes is admin-only in v1 -->
+			{#if ($config?.features?.enable_notes ?? false) && $user?.role === 'admin'}
 				<div class="flex items-center w-full">
 					<a
 						href="/notes"
@@ -326,7 +330,8 @@
 				</div>
 			{/if}
 
-			{#if $config?.features?.enable_calendar && ($user?.role === 'admin' || $user?.permissions?.features?.calendar)}
+			<!-- OMA: user-hidden — Calendar is admin-only in v1 -->
+			{#if $config?.features?.enable_calendar && $user?.role === 'admin'}
 				<div class="flex items-center w-full">
 					<a
 						href="/calendar"
@@ -370,7 +375,8 @@
 				</div>
 			{/if}
 
-			{#if $config?.features?.enable_automations && ($user?.role === 'admin' || $user?.permissions?.features?.automations)}
+			<!-- OMA: user-hidden — Automations is admin-only in v1 -->
+			{#if $config?.features?.enable_automations && $user?.role === 'admin'}
 				<div class="flex items-center w-full">
 					<a
 						href="/automations"
