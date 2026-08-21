@@ -2,7 +2,8 @@
 	import { getVersionUpdates } from '$lib/apis';
 	import { getOllamaVersion } from '$lib/apis/ollama';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { WEBUI_NAME, config, showChangelog } from '$lib/stores';
+	import { WEBUI_NAME, config, showChangelog, user } from '$lib/stores';
+	import { OMA_AGENT_VERSION, OMA_UI_VERSION } from '$lib/omaVersion';
 	import { compareVersion } from '$lib/utils';
 	import { onMount, getContext } from 'svelte';
 
@@ -52,29 +53,42 @@
 	<h2 class="text-sm font-medium text-gray-900 dark:text-white mb-4">{$i18n.t('About')}</h2>
 
 	<div class="flex-1 min-h-0 overflow-y-auto scrollbar-hover pr-1.5">
-		<UserSettingSection title={`${$WEBUI_NAME} ${$i18n.t('Version')}`} first>
+		<!-- OMA: agent + UI versions (env-sourced), visible to all users -->
+		<UserSettingSection title={$i18n.t('Versions')} first>
+			<UserSettingRow label={$i18n.t('Agent version')}>
+				<span class="text-xs text-gray-900 dark:text-white">{OMA_AGENT_VERSION || '—'}</span>
+			</UserSettingRow>
+			<UserSettingRow label={$i18n.t('UI version')}>
+				<span class="text-xs text-gray-900 dark:text-white">{OMA_UI_VERSION || '—'}</span>
+			</UserSettingRow>
+		</UserSettingSection>
+
+		<UserSettingSection title={`${$WEBUI_NAME} ${$i18n.t('Version')}`}>
 			<UserSettingRow
 				description={$i18n.t('View the installed version and check release updates.')}
 			>
 				<div slot="label" class="flex flex-col text-xs text-gray-600 dark:text-gray-400">
-					<div class="flex gap-1">
-						<Tooltip content={WEBUI_BUILD_HASH}>
-							v{WEBUI_VERSION}
-						</Tooltip>
+					<!-- OMA: user-hidden — version number is admin-only in v1 (kept "See what's new" for all) -->
+					{#if $user?.role === 'admin'}
+						<div class="flex gap-1">
+							<Tooltip content={WEBUI_BUILD_HASH}>
+								v{WEBUI_VERSION}
+							</Tooltip>
 
-						{#if $config?.features?.enable_version_update_check}
-							<a
-								href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-								target="_blank"
-							>
-								{updateAvailable === null
-									? $i18n.t('Checking for updates...')
-									: updateAvailable
-										? `(v${version.latest} ${$i18n.t('available!')})`
-										: $i18n.t('(latest)')}
-							</a>
-						{/if}
-					</div>
+							{#if $config?.features?.enable_version_update_check}
+								<a
+									href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
+									target="_blank"
+								>
+									{updateAvailable === null
+										? $i18n.t('Checking for updates...')
+										: updateAvailable
+											? `(v${version.latest} ${$i18n.t('available!')})`
+											: $i18n.t('(latest)')}
+								</a>
+							{/if}
+						</div>
+					{/if}
 
 					<button
 						class={actionButtonClass}
@@ -86,7 +100,8 @@
 					</button>
 				</div>
 
-				{#if $config?.features?.enable_version_update_check}
+				<!-- OMA: user-hidden — Check for updates is admin-only in v1 -->
+				{#if $config?.features?.enable_version_update_check && $user?.role === 'admin'}
 					<button
 						class={actionButtonClass}
 						on:click={() => {
@@ -117,7 +132,8 @@
 					<span class="capitalize">{$config?.license_metadata?.type}</span> license purchased by
 					<span class="capitalize">{$config?.license_metadata?.organization_name}</span>
 				</div>
-			{:else}
+			{:else if $user?.role === 'admin'}
+				<!-- OMA: user-hidden — external community links (Discord/X/GitHub) admin-only in v1 -->
 				<div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-gray-400 dark:text-gray-600">
 					<a
 						class="hover:text-gray-700 dark:hover:text-gray-400"
