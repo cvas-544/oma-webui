@@ -3,7 +3,6 @@
 // Description: OMA agent + UI version strings, sourced from build-time env vars.
 //              Displayed in Settings → About for all users.
 // Author:      Vasu Chukka
-// Co-author:   Claude Code
 // ---------------------------------------------------------------------------
 
 // OMA: version values come from build-time env vars for now.
