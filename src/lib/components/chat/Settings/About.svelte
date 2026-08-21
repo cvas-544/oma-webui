@@ -61,6 +61,18 @@
 			<UserSettingRow label={$i18n.t('UI version')}>
 				<span class="text-xs text-gray-900 dark:text-white">{OMA_UI_VERSION || '—'}</span>
 			</UserSettingRow>
+
+			<!-- OMA: second "See what's new" under the UI version (all users). -->
+			<!-- OPEN POINT: point this at an OMA-controlled changelog we own; for now it -->
+			<!-- opens the same modal as the OpenWebUI one so we can compare placement. -->
+			<button
+				class={actionButtonClass}
+				on:click={() => {
+					showChangelog.set(true);
+				}}
+			>
+				<div>{$i18n.t("See what's new")}</div>
+			</button>
 		</UserSettingSection>
 
 		<UserSettingSection title={`${$WEBUI_NAME} ${$i18n.t('Version')}`}>
