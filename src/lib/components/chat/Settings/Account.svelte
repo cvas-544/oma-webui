@@ -250,6 +250,8 @@
 				/>
 			</UserSettingField>
 
+			<!-- OMA: user-hidden — Gender + Birth Date are admin-only in v1 -->
+			{#if $user?.role === 'admin'}
 			<UserSettingField
 				label={$i18n.t('Gender')}
 				description={$i18n.t('Choose the gender value stored on your profile.')}
@@ -299,8 +301,11 @@
 					required
 				/>
 			</UserSettingField>
+			{/if}
 		</UserSettingSection>
 
+		<!-- OMA: user-hidden — User Variables (system-prompt injection) admin-only in v1 -->
+		{#if $user?.role === 'admin'}
 		<section class="mt-4 w-full">
 			<div
 				class="mb-0.5 flex items-center justify-between gap-2 text-xs text-gray-600 dark:text-gray-400"
@@ -341,6 +346,7 @@
 				})}
 			</div>
 		</section>
+		{/if}
 
 		{#if $config?.features.enable_login_form && $config?.features.enable_password_change_form}
 			<UserSettingSection title={$i18n.t('Password')}>
@@ -348,7 +354,8 @@
 			</UserSettingSection>
 		{/if}
 
-		{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
+		<!-- OMA: user-hidden — API keys admin-only in v1 (was admin || api_keys permission) -->
+		{#if ($config?.features?.enable_api_keys ?? true) && $user?.role === 'admin'}
 			<UserSettingSection title={$i18n.t('API keys')}>
 				<UserSettingRow description={$i18n.t('Show or hide sensitive account secrets.')}>
 					<span slot="label">{$i18n.t('Secrets')}</span>
@@ -419,7 +426,7 @@
 							</UserSettingField>
 						{/if}
 
-						{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
+						{#if ($config?.features?.enable_api_keys ?? true) && $user?.role === 'admin'}
 							<UserSettingField
 								label={$i18n.t('API Key')}
 								description={$i18n.t('Create, copy, or rotate your API key.')}
