@@ -724,10 +724,21 @@
 		style="scroll-margin-top: 3rem;"
 	>
 		<div class={`shrink-0 ltr:mr-2 rtl:ml-2 hidden @lg:flex mt-0.5 `}>
-			<ProfileImage
-				src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-				className={'size-7 assistant-message-profile-image'}
-			/>
+			<!-- OMA: streaming ring around the assistant avatar (Enerparc blue conic-gradient,
+			     CSS keyframe — the Svelte equivalent of the React/Framer-Motion version) -->
+			<div class="relative size-7">
+				{#if !message.done}
+					<div class="oma-avatar-ring absolute inset-0 rounded-2xl"></div>
+				{/if}
+				<div
+					class="absolute inset-[2px] rounded-2xl overflow-hidden bg-white dark:bg-[#191919]"
+				>
+					<ProfileImage
+						src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
+						className={'size-full assistant-message-profile-image'}
+					/>
+				</div>
+			</div>
 		</div>
 
 		<div class="flex-auto w-0 pl-1 relative">
@@ -1736,5 +1747,24 @@
 	.buttons {
 		-ms-overflow-style: none; /* IE and Edge */
 		scrollbar-width: none; /* Firefox */
+	}
+
+	/* OMA: streaming ring around the assistant avatar — Enerparc blue conic-gradient,
+	   spins 360° every 1.1s (CSS keyframe; no Framer Motion). Shown only while streaming. */
+	.oma-avatar-ring {
+		background: conic-gradient(
+			from 0deg,
+			#003877,
+			#3b82f6 20%,
+			transparent 60%,
+			transparent
+		);
+		animation: oma-avatar-spin 1.1s linear infinite;
+	}
+
+	@keyframes oma-avatar-spin {
+		to {
+			transform: rotate(360deg);
+		}
 	}
 </style>
