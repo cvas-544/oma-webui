@@ -31,10 +31,38 @@
 	const HEATMAP_GAP_PX = 4;
 	const MIN_HEATMAP_COLUMNS = 26;
 	const DEFAULT_HEATMAP_COLUMNS = 26;
-	const MIN_MONTH_LABEL_GAP = 6;
+	const MIN_MONTH_LABEL_GAP = 3; // OMA: show every month across the 24-week window (was 6 → skipped months)
+
+	// OMA: render a continuous 26-week (182-day) grid so every zero-activity day
+	// shows as a gray rectangle (GitHub-style), instead of collapsing to the few
+	// days the backend returned.
+	const HEATMAP_WINDOW_DAYS = 24 * 7; // 24 weeks ≈ 6 months
+
+	const toDateString = (date: Date) => {
+		const month = `${date.getMonth() + 1}`.padStart(2, '0');
+		const day = `${date.getDate()}`.padStart(2, '0');
+		return `${date.getFullYear()}-${month}-${day}`;
+	};
+
+	const buildContinuousDaily = (raw: UserUsageHeatmapEntry[]): UserUsageHeatmapEntry[] => {
+		const byDate = new Map(raw.map((entry) => [entry.date, entry]));
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+
+		const result: UserUsageHeatmapEntry[] = [];
+		for (let offset = HEATMAP_WINDOW_DAYS - 1; offset >= 0; offset--) {
+			const date = new Date(today);
+			date.setDate(today.getDate() - offset);
+			const dateString = toDateString(date);
+			result.push(
+				byDate.get(dateString) ?? { date: dateString, messages: 0, chats: 0, tokens: 0, models: {} }
+			);
+		}
+		return result;
+	};
 
 	$: modelNames = new Map($models.map((model) => [model.id, model.name || model.id]));
-	$: dailyHeatmap = usage?.heatmap ?? [];
+	$: dailyHeatmap = buildContinuousDaily(usage?.heatmap ?? []);
 	$: weeklyHeatmap = new Map((usage?.weekly_heatmap ?? []).map((entry) => [entry.date, entry]));
 	$: cumulativeHeatmap = new Map(
 		(usage?.cumulative_heatmap ?? []).map((entry) => [entry.date, entry])
@@ -57,48 +85,24 @@
 	$: hasUsage = (usage?.totals.messages ?? 0) > 0 || (usage?.totals.lifetime_tokens ?? 0) > 0;
 
 	const palettes = [
-		[
-			'bg-gray-100 dark:bg-gray-800',
-			'bg-green-100 dark:bg-green-900/40',
-			'bg-green-300 dark:bg-green-700/60',
-			'bg-green-500 dark:bg-green-600/80',
-			'bg-green-700 dark:bg-green-500'
-		],
+		// OMA: Enerparc blue-spectrum heatmap — every model is a shade of blue (was multi-hue).
+		// P1 Enerparc navy (brand primary, darkest = #003877)
 		[
 			'bg-gray-100 dark:bg-gray-800',
 			'bg-blue-100 dark:bg-blue-900/40',
 			'bg-blue-300 dark:bg-blue-700/60',
-			'bg-blue-500 dark:bg-blue-600/80',
-			'bg-blue-700 dark:bg-blue-500'
+			'bg-blue-600 dark:bg-blue-600/80',
+			'bg-[#003877] dark:bg-blue-400'
 		],
+		// P2 Sky
 		[
 			'bg-gray-100 dark:bg-gray-800',
-			'bg-purple-100 dark:bg-purple-900/40',
-			'bg-purple-300 dark:bg-purple-700/60',
-			'bg-purple-500 dark:bg-purple-600/80',
-			'bg-purple-700 dark:bg-purple-500'
+			'bg-sky-100 dark:bg-sky-900/40',
+			'bg-sky-300 dark:bg-sky-700/60',
+			'bg-sky-500 dark:bg-sky-600/80',
+			'bg-sky-700 dark:bg-sky-500'
 		],
-		[
-			'bg-gray-100 dark:bg-gray-800',
-			'bg-orange-100 dark:bg-orange-900/40',
-			'bg-orange-300 dark:bg-orange-700/60',
-			'bg-orange-500 dark:bg-orange-600/80',
-			'bg-orange-700 dark:bg-orange-500'
-		],
-		[
-			'bg-gray-100 dark:bg-gray-800',
-			'bg-rose-100 dark:bg-rose-900/40',
-			'bg-rose-300 dark:bg-rose-700/60',
-			'bg-rose-500 dark:bg-rose-600/80',
-			'bg-rose-700 dark:bg-rose-500'
-		],
-		[
-			'bg-gray-100 dark:bg-gray-800',
-			'bg-yellow-100 dark:bg-yellow-900/40',
-			'bg-yellow-300 dark:bg-yellow-700/60',
-			'bg-yellow-500 dark:bg-yellow-600/80',
-			'bg-yellow-700 dark:bg-yellow-500'
-		],
+		// P3 Cyan
 		[
 			'bg-gray-100 dark:bg-gray-800',
 			'bg-cyan-100 dark:bg-cyan-900/40',
@@ -106,27 +110,57 @@
 			'bg-cyan-500 dark:bg-cyan-600/80',
 			'bg-cyan-700 dark:bg-cyan-500'
 		],
+		// P4 Indigo
 		[
 			'bg-gray-100 dark:bg-gray-800',
-			'bg-red-100 dark:bg-red-900/40',
-			'bg-red-300 dark:bg-red-700/60',
-			'bg-red-500 dark:bg-red-600/80',
-			'bg-red-700 dark:bg-red-500'
+			'bg-indigo-100 dark:bg-indigo-900/40',
+			'bg-indigo-300 dark:bg-indigo-700/60',
+			'bg-indigo-500 dark:bg-indigo-600/80',
+			'bg-indigo-700 dark:bg-indigo-500'
 		],
+		// P5 Teal
 		[
 			'bg-gray-100 dark:bg-gray-800',
-			'bg-neutral-200 dark:bg-neutral-800',
-			'bg-neutral-400 dark:bg-neutral-600',
-			'bg-neutral-600 dark:bg-neutral-400',
-			'bg-neutral-800 dark:bg-neutral-200'
+			'bg-teal-100 dark:bg-teal-900/40',
+			'bg-teal-300 dark:bg-teal-700/60',
+			'bg-teal-500 dark:bg-teal-600/80',
+			'bg-teal-700 dark:bg-teal-500'
+		],
+		// P6 Blue (models starting with 'o' land here)
+		[
+			'bg-gray-100 dark:bg-gray-800',
+			'bg-blue-100 dark:bg-blue-900/40',
+			'bg-blue-300 dark:bg-blue-700/60',
+			'bg-blue-500 dark:bg-blue-600/80',
+			'bg-blue-700 dark:bg-blue-500'
+		],
+		// P7 Slate
+		[
+			'bg-gray-100 dark:bg-gray-800',
+			'bg-slate-200 dark:bg-slate-800',
+			'bg-slate-400 dark:bg-slate-600',
+			'bg-slate-600 dark:bg-slate-400',
+			'bg-slate-800 dark:bg-slate-200'
+		],
+		// P8 Sky (deep)
+		[
+			'bg-gray-100 dark:bg-gray-800',
+			'bg-sky-200 dark:bg-sky-800',
+			'bg-sky-400 dark:bg-sky-600',
+			'bg-sky-600 dark:bg-sky-400',
+			'bg-sky-800 dark:bg-sky-200'
+		],
+		// P9 Blue (deep, fallback)
+		[
+			'bg-gray-100 dark:bg-gray-800',
+			'bg-blue-200 dark:bg-blue-900/40',
+			'bg-blue-400 dark:bg-blue-700/60',
+			'bg-blue-600 dark:bg-blue-600/80',
+			'bg-blue-800 dark:bg-blue-500'
 		]
 	];
 
-	const heatmapModes: Array<{ value: HeatmapMode; label: string }> = [
-		{ value: 'daily', label: 'Daily' },
-		{ value: 'weekly', label: 'Weekly' },
-		{ value: 'cumulative', label: 'Cumulative' }
-	];
+	// OMA: heatmap is Daily-only — Weekly/Cumulative toggle removed.
 
 	const loadUsage = async () => {
 		loading = true;
@@ -330,35 +364,17 @@
 			</UserSettingSection>
 
 			<section class="mt-4 w-full">
-				<div class="mb-2 flex min-w-0 items-center justify-between gap-3">
-					<h3 class="min-w-0 shrink truncate text-xs text-gray-400 dark:text-gray-600">
-						{$i18n.t('Token activity')}
+				<!-- OMA: single Daily view — removed Weekly/Cumulative toggle; heading left-aligned -->
+				<div class="mb-2">
+					<h3 class="text-xs text-gray-400 dark:text-gray-600">
+						{$i18n.t('Daily token activity')}
 					</h3>
-					<div
-						class="flex min-w-0 max-w-[70%] shrink items-center gap-3 overflow-hidden whitespace-nowrap"
-					>
-						{#each heatmapModes as mode}
-							<button
-								type="button"
-								class="min-w-0 shrink truncate whitespace-nowrap text-xs transition-colors {heatmapMode ===
-								mode.value
-									? 'text-gray-900 dark:text-white'
-									: 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}
-								"
-								on:click={() => {
-									heatmapMode = mode.value;
-								}}
-							>
-								{$i18n.t(mode.label)}
-							</button>
-						{/each}
-					</div>
 				</div>
 
 				<div class="pb-1">
 					<div class="w-full min-w-0 overflow-hidden" bind:clientWidth={heatmapContainerWidth}>
 						<div
-							class="mx-auto grid grid-flow-col"
+							class="grid grid-flow-col"
 							style="width: min(100%, {heatmapGridWidth}); gap: {HEATMAP_GAP_PX}px; aspect-ratio: {heatmapColumns} / 7; grid-template-columns: repeat({heatmapColumns}, minmax(0, 1fr)); grid-template-rows: repeat(7, minmax(0, 1fr));"
 						>
 							{#each heatmapCells as entry}
@@ -378,7 +394,7 @@
 						</div>
 
 						<div
-							class="mx-auto mt-2 grid text-[0.6875rem] leading-none text-gray-400 dark:text-gray-600"
+							class="mt-2 grid text-[0.6875rem] leading-none text-gray-400 dark:text-gray-600"
 							style="width: min(100%, {heatmapGridWidth}); column-gap: {HEATMAP_GAP_PX}px; grid-template-columns: repeat({heatmapColumns}, minmax(0, 1fr));"
 						>
 							{#each monthLabels as month}
@@ -389,19 +405,7 @@
 						</div>
 					</div>
 
-					{#if usage.top_models.length > 0}
-						<div
-							class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[0.6875rem] text-gray-400 dark:text-gray-600"
-						>
-							{#each usage.top_models.slice(0, 6) as model}
-								<div class="flex min-w-0 items-center gap-1.5">
-									<span class="size-2 shrink-0 rounded-[2px] {modelPalette(model.model_id)[3]}"
-									></span>
-									<span class="max-w-28 truncate">{modelName(model.model_id)}</span>
-								</div>
-							{/each}
-						</div>
-					{/if}
+					<!-- OMA: removed per-model legend dots — single O&M assistant, no multi-model legend -->
 				</div>
 			</section>
 
@@ -413,11 +417,7 @@
 				</UserSettingSection>
 			{:else}
 				<UserSettingSection title={$i18n.t('Activity insights')}>
-					<UserSettingRow label={$i18n.t('Models')}>
-						<span class="text-xs text-gray-900 dark:text-white">
-							{usage.totals.models_used.toLocaleString()}
-						</span>
-					</UserSettingRow>
+					<!-- OMA: removed 'Models' count row — single O&M assistant -->
 					<UserSettingRow label={$i18n.t('Average tokens per chat')}>
 						<span class="text-xs text-gray-900 dark:text-white">
 							{formatNumber(usage.insights.average_tokens_per_chat)}
@@ -446,22 +446,7 @@
 					</UserSettingRow>
 				</UserSettingSection>
 
-				<UserSettingSection title={$i18n.t('Top models')}>
-					{#if usage.top_models.length === 0}
-						<div class="text-xs text-gray-500 dark:text-gray-400">
-							{$i18n.t('No model usage found')}
-						</div>
-					{:else}
-						{#each usage.top_models as model}
-							<UserSettingRow label={modelName(model.model_id)}>
-								<span class="text-xs text-gray-500 dark:text-gray-400">
-									{model.messages.toLocaleString()}
-									{$i18n.t('messages')} · {formatNumber(model.total_tokens)}
-								</span>
-							</UserSettingRow>
-						{/each}
-					{/if}
-				</UserSettingSection>
+				<!-- OMA: removed 'Top models' section — single O&M assistant -->
 
 				{#if usage.top_tools.length > 0}
 					<UserSettingSection title={$i18n.t('Most used tools')}>
