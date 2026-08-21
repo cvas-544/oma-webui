@@ -1091,7 +1091,8 @@
 
 							{#if message.done}
 								{#if !readOnly}
-									{#if $user?.role === 'user' ? ($user?.permissions?.chat?.edit ?? true) : true}
+									<!-- OMA: user-hidden — Edit agent message is admin-only in v1 -->
+									{#if $user?.role === 'admin'}
 										<Tooltip content={$i18n.t('Edit')} placement="bottom">
 											<button
 												aria-label={$i18n.t('Edit')}
@@ -1181,7 +1182,8 @@
 									</Tooltip>
 								{/if}
 
-								{#if onInsertToNote && visibleResponseContent}
+								<!-- OMA: user-hidden — Insert into note is admin-only in v1 -->
+								{#if onInsertToNote && visibleResponseContent && $user?.role === 'admin'}
 									<Tooltip content={$i18n.t('Insert into note')} placement="bottom">
 										<button
 											aria-label={$i18n.t('Insert into note')}
@@ -1197,7 +1199,8 @@
 									</Tooltip>
 								{/if}
 
-								{#if !readOnly && ($user?.role === 'admin' || ($user?.permissions?.chat?.tts ?? true))}
+								<!-- OMA: user-hidden — Read Aloud (TTS) admin-only in v1 (no voice) -->
+								{#if !readOnly && $user?.role === 'admin'}
 									<Tooltip content={$i18n.t('Read Aloud')} placement="bottom">
 										<button
 											aria-label={$i18n.t('Read Aloud')}
@@ -1416,7 +1419,8 @@
 										</Tooltip>
 									{/if}
 
-									{#if isLastMessage && ($user?.role === 'admin' || ($user?.permissions?.chat?.continue_response ?? true))}
+									<!-- OMA: user-hidden — Continue Response admin-only in v1 -->
+									{#if isLastMessage && $user?.role === 'admin'}
 										<Tooltip content={$i18n.t('Continue Response')} placement="bottom">
 											<button
 												aria-label={$i18n.t('Continue Response')}
@@ -1596,7 +1600,8 @@
 										</Tooltip>
 									{/each}
 
-									{#if message.done && !readOnly && forkHandler}
+									<!-- OMA: user-hidden — Fork chat admin-only in v1 -->
+									{#if message.done && !readOnly && forkHandler && $user?.role === 'admin'}
 										<Tooltip content="Fork chat" placement="bottom">
 											<button
 												aria-label="Fork chat"
@@ -1627,7 +1632,8 @@
 										</Tooltip>
 									{/if}
 
-									{#if $user?.role === 'admin' || ($user?.permissions?.chat?.delete_message ?? true)}
+									<!-- OMA: user-hidden — Delete message admin-only in v1 -->
+									{#if $user?.role === 'admin'}
 										{#if siblings.length > 1}
 											<Tooltip content={$i18n.t('Delete')} placement="bottom">
 												<button
