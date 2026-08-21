@@ -8,6 +8,8 @@
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 
 	import { showSettings, mobile, showSidebar, user, config, settings } from '$lib/stores';
+	import { showOmaFeedback } from '$lib/stores/omaFeedback';
+	import ChatBubbleOvalIcon from '$lib/components/icons/ChatBubbleOval.svelte';
 
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
@@ -551,6 +553,21 @@
 					<div class=" self-center truncate">{$i18n.t('Admin Panel')}</div>
 				</a>
 			{/if}
+
+			<!-- OMA: voluntary feedback — visible to all users -->
+			<button
+				class="flex h-[1.6875rem] items-center gap-2 rounded-xl px-2 text-[13px] w-full hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition cursor-pointer select-none"
+				type="button"
+				on:click={() => {
+					show = false;
+					showOmaFeedback.set(true);
+				}}
+			>
+				<div class="self-center">
+					<ChatBubbleOvalIcon className="size-3.5" strokeWidth="1.5" />
+				</div>
+				<div class=" self-center truncate">{$i18n.t('Feedback')}</div>
+			</button>
 
 			<button
 				class="flex h-[1.6875rem] items-center gap-2 rounded-xl px-2 text-[13px] w-full hover:bg-gray-50/40 dark:hover:bg-gray-800/40 transition cursor-pointer select-none"

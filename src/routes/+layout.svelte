@@ -76,6 +76,7 @@
 	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import SyncStatsModal from '$lib/components/chat/Settings/SyncStatsModal.svelte';
 	import WeeklySurvey from '$lib/components/chat/WeeklySurvey.svelte';
+	import OmaFeedbackModal from '$lib/components/chat/OmaFeedbackModal.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getOutputText } from '$lib/components/chat/Messages/structuredOutput';
 	import { getUserSettings } from '$lib/apis/users';
@@ -1340,6 +1341,9 @@
 {/if}
 
 <WeeklySurvey />
+
+<!-- OMA: voluntary feedback modal (opened from the user menu) -->
+<OmaFeedbackModal />
 
 <Toaster
 	theme={$theme.includes('dark')

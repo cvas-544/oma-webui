@@ -44,6 +44,7 @@
 	import AdminModels from '$lib/components/admin/Settings/Models.svelte';
 	import AdminSubagents from '$lib/components/admin/Settings/Subagents.svelte';
 	import AdminEvaluations from '$lib/components/admin/Settings/Evaluations.svelte';
+	import OmaFeedbackDashboard from '$lib/components/admin/Settings/OmaFeedbackDashboard.svelte';
 	import AdminAnalytics from '$lib/components/admin/Analytics.svelte';
 	import AdminIntegrations from '$lib/components/admin/Settings/Integrations.svelte';
 	import AdminDocuments from '$lib/components/admin/Settings/Documents.svelte';
@@ -123,6 +124,7 @@
 		'admin:subagents': 'AI',
 		'admin:evaluations': 'Quality',
 		'admin:analytics': 'Quality',
+		'admin:feedback': 'Quality',
 		'admin:integrations': 'Tools',
 		'admin:documents': 'Tools',
 		'admin:web': 'Tools',
@@ -718,6 +720,12 @@
 			keywords: ['analytics', 'usage', 'stats', 'dashboard', 'models', 'users', 'messages']
 		},
 		{
+			// OMA: admin feedback + survey dashboard
+			id: 'admin:feedback',
+			title: 'Feedback',
+			keywords: ['feedback', 'survey', 'voluntary', 'results', 'responses', 'oma']
+		},
+		{
 			id: 'admin:integrations',
 			title: 'Integrations',
 			keywords: ['tools', 'integrations', 'plugins', 'extensions', 'functions', 'openapi', 'server']
@@ -1253,6 +1261,8 @@
 				<AdminEvaluations />
 			{:else if selectedTab === 'admin:analytics'}
 				<AdminAnalytics />
+			{:else if selectedTab === 'admin:feedback'}
+				<OmaFeedbackDashboard />
 			{:else if selectedTab === 'admin:integrations'}
 				<AdminIntegrations {saveSettings} />
 			{:else if selectedTab === 'admin:documents'}
