@@ -1,9 +1,9 @@
 <script lang="ts">
 	// ---------------------------------------------------------------------------
 	// File:        OmaFeedbackDashboard.svelte
-	// Description: Admin dashboard scaffold for OMA feedback + survey results.
-	//              Admins trigger surveys and review voluntary feedback / survey
-	//              results here. Data is served by an S3-backed backend managed
+	// Description: Admin "Feedback Dashboard" — two tabs: Survey (Create Survey,
+	//              Ongoing Survey, Survey results) and Feedback (voluntary feedback
+	//              results). Data is served by an S3-backed backend managed
 	//              separately (see OPEN POINTs); this is the UI shell.
 	// Author:      Vasu Chukka
 	// ---------------------------------------------------------------------------
@@ -12,19 +12,21 @@
 
 	const i18n = getContext('i18n');
 
-	type Tab = 'feedback' | 'survey';
-	let activeTab: Tab = 'feedback';
+	type Tab = 'survey' | 'feedback';
+	let activeTab: Tab = 'survey';
 
 	// OPEN POINT: wire to the S3-backed admin endpoints (managed separately):
 	//   - GET  feedback results   → feedbackResults
-	//   - GET  survey results     → surveyResults
-	//   - POST trigger survey     → triggerSurvey()
+	//   - GET  ongoing survey      → ongoingSurvey
+	//   - GET  survey results      → surveyResults
+	//   - POST create survey       → createSurvey()
 	let feedbackResults: any[] = [];
+	let ongoingSurvey: any = null;
 	let surveyResults: any[] = [];
 
-	const triggerSurvey = async () => {
-		// OPEN POINT: POST to the survey-trigger endpoint.
-		toast.info($i18n.t('Survey trigger endpoint not configured yet.'));
+	const createSurvey = async () => {
+		// OPEN POINT: open a create-survey flow / POST to the survey endpoint.
+		toast.info($i18n.t('Create-survey flow not configured yet.'));
 	};
 
 	const tabButtonClass = (active: boolean) =>
@@ -33,68 +35,102 @@
 				? 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
 				: 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
 		}`;
+
+	const sectionHeadingClass =
+		'text-[0.8125rem] font-medium text-gray-900 dark:text-white';
+	const emptyClass =
+		'flex h-28 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-gray-100/70 text-center text-xs text-gray-400 dark:border-white/[0.06] dark:text-gray-600';
 </script>
 
 <div class="flex flex-col h-full text-sm">
-	<div class="mb-3 flex items-center justify-between gap-2">
-		<h2 class="text-sm font-medium text-gray-900 dark:text-white">{$i18n.t('Feedback')}</h2>
+	<h2 class="mb-3 text-sm font-medium text-gray-900 dark:text-white">
+		{$i18n.t('Feedback Dashboard')}
+	</h2>
 
-		<button
-			class="rounded-full bg-[#003877] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#002a63]"
-			type="button"
-			on:click={triggerSurvey}
-		>
-			{$i18n.t('Trigger survey')}
-		</button>
-	</div>
-
-	<div class="mb-3 flex items-center gap-1">
-		<button class={tabButtonClass(activeTab === 'feedback')} on:click={() => (activeTab = 'feedback')}>
-			{$i18n.t('Feedback results')}
-		</button>
+	<div class="mb-4 flex items-center gap-1">
 		<button class={tabButtonClass(activeTab === 'survey')} on:click={() => (activeTab = 'survey')}>
-			{$i18n.t('Survey results')}
+			{$i18n.t('Survey')}
+		</button>
+		<button class={tabButtonClass(activeTab === 'feedback')} on:click={() => (activeTab = 'feedback')}>
+			{$i18n.t('Feedback')}
 		</button>
 	</div>
 
 	<div class="flex-1 min-h-0 overflow-y-auto scrollbar-hover pr-1.5">
-		{#if activeTab === 'feedback'}
-			{#if feedbackResults.length === 0}
-				<div
-					class="flex h-40 flex-col items-center justify-center gap-1 text-center text-xs text-gray-400 dark:text-gray-600"
-				>
-					<div>{$i18n.t('No feedback yet.')}</div>
-					<div>{$i18n.t('Voluntary feedback from users will appear here.')}</div>
-				</div>
-			{:else}
-				<div class="flex flex-col gap-2">
-					{#each feedbackResults as item}
+		{#if activeTab === 'survey'}
+			<div class="flex flex-col gap-5">
+				<!-- Create Survey -->
+				<section class="flex flex-col gap-2">
+					<div class="flex items-center justify-between gap-2">
+						<div class={sectionHeadingClass}>{$i18n.t('Create Survey')}</div>
+						<button
+							class="rounded-full bg-[#003877] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#002a63]"
+							type="button"
+							on:click={createSurvey}
+						>
+							{$i18n.t('Create survey')}
+						</button>
+					</div>
+					<p class="text-xs text-gray-500 dark:text-gray-400">
+						{$i18n.t('Configure and launch a new survey for users.')}
+					</p>
+				</section>
+
+				<!-- Ongoing Survey -->
+				<section class="flex flex-col gap-2">
+					<div class={sectionHeadingClass}>{$i18n.t('Ongoing Survey')}</div>
+					{#if !ongoingSurvey}
+						<div class={emptyClass}>
+							<div>{$i18n.t('No ongoing survey.')}</div>
+							<div>{$i18n.t('The currently running survey will appear here.')}</div>
+						</div>
+					{:else}
 						<div class="rounded-xl border border-gray-100/60 p-3 dark:border-white/[0.05]">
-							<div class="text-xs text-gray-500 dark:text-gray-400">
-								{item?.category} · {item?.user_name} · {item?.created_at}
+							<div class="text-sm text-gray-800 dark:text-gray-200">{ongoingSurvey?.title}</div>
+						</div>
+					{/if}
+				</section>
+
+				<!-- Survey results -->
+				<section class="flex flex-col gap-2">
+					<div class={sectionHeadingClass}>{$i18n.t('Survey results')}</div>
+					{#if surveyResults.length === 0}
+						<div class={emptyClass}>
+							<div>{$i18n.t('No survey results yet.')}</div>
+							<div>{$i18n.t('Results from completed surveys will appear here.')}</div>
+						</div>
+					{:else}
+						<div class="flex flex-col gap-2">
+							{#each surveyResults as item}
+								<div class="rounded-xl border border-gray-100/60 p-3 dark:border-white/[0.05]">
+									<div class="text-sm text-gray-800 dark:text-gray-200">{JSON.stringify(item)}</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</section>
+			</div>
+		{:else if activeTab === 'feedback'}
+			<section class="flex flex-col gap-2">
+				<div class={sectionHeadingClass}>{$i18n.t('Feedback results')}</div>
+				{#if feedbackResults.length === 0}
+					<div class={emptyClass}>
+						<div>{$i18n.t('No feedback yet.')}</div>
+						<div>{$i18n.t('Voluntary feedback from users will appear here.')}</div>
+					</div>
+				{:else}
+					<div class="flex flex-col gap-2">
+						{#each feedbackResults as item}
+							<div class="rounded-xl border border-gray-100/60 p-3 dark:border-white/[0.05]">
+								<div class="text-xs text-gray-500 dark:text-gray-400">
+									{item?.category} · {item?.user_name} · {item?.created_at}
+								</div>
+								<div class="mt-1 text-sm text-gray-800 dark:text-gray-200">{item?.message}</div>
 							</div>
-							<div class="mt-1 text-sm text-gray-800 dark:text-gray-200">{item?.message}</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
-		{:else if activeTab === 'survey'}
-			{#if surveyResults.length === 0}
-				<div
-					class="flex h-40 flex-col items-center justify-center gap-1 text-center text-xs text-gray-400 dark:text-gray-600"
-				>
-					<div>{$i18n.t('No survey results yet.')}</div>
-					<div>{$i18n.t('Trigger a survey to start collecting responses.')}</div>
-				</div>
-			{:else}
-				<div class="flex flex-col gap-2">
-					{#each surveyResults as item}
-						<div class="rounded-xl border border-gray-100/60 p-3 dark:border-white/[0.05]">
-							<div class="text-sm text-gray-800 dark:text-gray-200">{JSON.stringify(item)}</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
+						{/each}
+					</div>
+				{/if}
+			</section>
 		{/if}
 	</div>
 </div>
