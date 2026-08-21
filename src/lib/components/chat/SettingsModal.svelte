@@ -1086,6 +1086,8 @@
 							<span>{$i18n.t('Usage')}</span>
 						</button>
 					{:else if tabId === 'archived_chats'}
+						<!-- OMA: user-hidden — Archived Chats tab admin-only in v1 -->
+						{#if $user?.role === 'admin'}
 						<button
 							role="tab"
 							aria-controls="tab-archived-chats"
@@ -1098,6 +1100,7 @@
 							<ArchiveBox className="size-3.5" strokeWidth="2" />
 							<span>{$i18n.t('Archived Chats')}</span>
 						</button>
+						{/if}
 					{:else if tabId === 'account'}
 						<button
 							role="tab"
@@ -1222,7 +1225,7 @@
 				<DataControls {saveSettings} />
 			{:else if selectedTab === 'usage'}
 				<Usage />
-			{:else if selectedTab === 'archived_chats'}
+			{:else if selectedTab === 'archived_chats' && $user?.role === 'admin'}
 				<ArchivedChats />
 			{:else if selectedTab === 'account'}
 				<Account
