@@ -77,6 +77,7 @@
 	import SyncStatsModal from '$lib/components/chat/Settings/SyncStatsModal.svelte';
 	import WeeklySurvey from '$lib/components/chat/WeeklySurvey.svelte';
 	import OmaFeedbackModal from '$lib/components/chat/OmaFeedbackModal.svelte';
+	import OmaHelpModal from '$lib/components/chat/OmaHelpModal.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getOutputText } from '$lib/components/chat/Messages/structuredOutput';
 	import { getUserSettings } from '$lib/apis/users';
@@ -1344,6 +1345,9 @@
 
 <!-- OMA: voluntary feedback modal (opened from the user menu) -->
 <OmaFeedbackModal />
+
+<!-- OMA: help & support ticket modal (opened from quick-settings menu) -->
+<OmaHelpModal />
 
 <Toaster
 	theme={$theme.includes('dark')

@@ -7,11 +7,12 @@
 	// Co-author:   Claude Code
 	// ---------------------------------------------------------------------------
 	import { theme, user } from '$lib/stores';
+	import { showOmaHelp } from '$lib/stores/omaHelp';
 	import { goto } from '$app/navigation';
 	import { userSignOut } from '$lib/apis/auths';
 	import Bars3BottomLeft from '$lib/components/icons/Bars3BottomLeft.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import ChatBubble from '$lib/components/icons/ChatBubble.svelte';
+	import QuestionMarkCircle from '$lib/components/icons/QuestionMarkCircle.svelte';
 	import SignOut from '$lib/components/icons/SignOut.svelte';
 	import Cog6 from '$lib/components/icons/Cog6.svelte';
 
@@ -56,10 +57,10 @@
 		goto('/settings');
 	}
 
-	// ── Feedback (Phase 6) ────────────────────────────────────────────────────
-	function handleFeedback() {
+	// ── Help ──────────────────────────────────────────────────────────────────
+	function handleHelp() {
 		expanded = false;
-		// TODO: open free-feedback modal (Phase 6)
+		showOmaHelp.set(true);
 	}
 </script>
 
@@ -95,7 +96,7 @@
 		</span>
 	</button>
 
-	<!-- ── Item 1: Feedback ─────────────────────────────────────────────────── -->
+	<!-- ── Item 1: Help ─────────────────────────────────────────────────────── -->
 	<div
 		class="absolute top-0 left-0 w-9 h-9 bg-gray-100 dark:bg-gray-800 will-change-transform"
 		style="
@@ -109,10 +110,10 @@
 	>
 		<button
 			class="w-full h-full flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-[#003877] dark:hover:text-[#73B2F2] transition-colors"
-			on:click={handleFeedback}
-			aria-label="Send feedback"
+			on:click={handleHelp}
+			aria-label="Help"
 		>
-			<ChatBubble className="size-4" strokeWidth="1.75" />
+			<QuestionMarkCircle className="size-4" strokeWidth="1.75" />
 		</button>
 	</div>
 
