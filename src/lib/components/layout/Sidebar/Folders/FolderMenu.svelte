@@ -19,6 +19,7 @@
 	export let onExport = () => {};
 	export let onShare = () => {};
 	export let onDelete = () => {};
+	export let onUngroup = () => {};
 	export let onCreateSubFolder = () => {};
 	export let onMarkAllRead = () => {};
 
@@ -103,6 +104,19 @@
 			</button>
 
 			<hr class="border-gray-50/30 dark:border-gray-800/30 mx-1 my-0.5" />
+
+			<button
+				class="flex h-[1.6875rem] w-full items-center gap-2 rounded-xl px-2 text-[13px] select-none cursor-pointer hover:bg-gray-50/40 dark:hover:bg-gray-800/40"
+				on:click={() => {
+					show = false;
+					onUngroup();
+				}}
+			>
+				<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 0 0-1.883 2.542l.857 6a2.25 2.25 0 0 0 2.227 1.932H19.05a2.25 2.25 0 0 0 2.227-1.932l.857-6a2.25 2.25 0 0 0-1.883-2.542m-16.5 0V6A2.25 2.25 0 0 1 6 3.75h3.879a1.5 1.5 0 0 1 1.06.44l2.122 2.12a1.5 1.5 0 0 0 1.06.44H18A2.25 2.25 0 0 1 20.25 9v.776" />
+				</svg>
+				<div class="flex items-center">{$i18n.t('Ungroup')}</div>
+			</button>
 
 			<button
 				class="flex h-[1.6875rem] w-full items-center gap-2 rounded-xl px-2 text-[13px] select-none cursor-pointer hover:bg-gray-50/40 dark:hover:bg-gray-800/40"

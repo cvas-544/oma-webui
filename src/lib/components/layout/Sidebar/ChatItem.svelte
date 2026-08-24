@@ -75,6 +75,9 @@
 	export let shiftKey = false;
 	export let readonly = false;
 
+	export let selectMode = false;
+	export let multiSelected = false;
+
 	export let ownerName: string | null = null;
 	export let ownerUserId: string | null = null;
 	export let onReadStateChange: (data: Record<string, unknown>) => void = () => {};
@@ -559,7 +562,12 @@
 						: ' hover:bg-gray-50 dark:hover:bg-gray-900 group-hover:bg-gray-50 dark:group-hover:bg-gray-900'}  whitespace-nowrap text-ellipsis transition"
 				href="/c/{id}"
 				aria-current={id === $chatId ? 'page' : undefined}
-				onclick={() => {
+				onclick={(e) => {
+					if (selectMode) {
+						e.preventDefault();
+						dispatch('multitoggle', { id });
+						return;
+					}
 					openPreview = false;
 					dispatch('select');
 
@@ -585,6 +593,22 @@
 				}}
 				draggable="false"
 			>
+				<!-- OMA: multi-select checkbox -->
+				{#if selectMode}
+					<div class="shrink-0 self-center pr-2">
+						<div class="size-4 rounded-full border-2 flex items-center justify-center transition-colors
+							{multiSelected
+								? 'bg-[#003877] border-[#003877] dark:bg-[#73B2F2] dark:border-[#73B2F2]'
+								: 'border-gray-300 dark:border-gray-600'}">
+							{#if multiSelected}
+								<svg class="size-2.5 text-white" viewBox="0 0 12 12" fill="none">
+									<path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+								</svg>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
 				{#if ownerUserId}
 					<Tooltip content={ownerName || 'Unknown'}>
 						<img
@@ -596,7 +620,7 @@
 				{/if}
 
 				<!-- Loading spinner for active chat (left side) -->
-				{#if active}
+				{#if active && !selectMode}
 					<div class="shrink-0 self-center pr-2">
 						<Spinner className="size-3" />
 					</div>
@@ -636,7 +660,7 @@
 		</LinkPreview.Root>
 	{/if}
 
-	{#if !readonly}
+	{#if !readonly && !selectMode}
 		<div
 			id="sidebar-chat-item-menu"
 			class="{showInlineActions

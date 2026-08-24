@@ -453,6 +453,18 @@
 		}
 	};
 
+	const ungroupHandler = async () => {
+		const res = await deleteFolderById(localStorage.token, folderId, false).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
+
+		if (res) {
+			toast.success($i18n.t('Folder ungrouped'));
+			onDelete(folderId);
+		}
+	};
+
 	const updateHandler = async ({ name, meta, data }) => {
 		if (name === '') {
 			toast.error($i18n.t('Folder name cannot be empty.'));
@@ -867,6 +879,7 @@
 							onDelete={() => {
 								showDeleteConfirm = true;
 							}}
+							onUngroup={ungroupHandler}
 							onExport={() => {
 								exportHandler();
 							}}

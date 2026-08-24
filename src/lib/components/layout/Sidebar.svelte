@@ -123,6 +123,50 @@
 
 	let showCreateFolderModal = false;
 
+	// OMA: chat multi-select + group into folder
+	let selectMode = false;
+	let selectedChatIds = new Set<string>();
+	let showGroupNameModal = false;
+	let groupFolderName = '';
+	let grouping = false;
+
+	const toggleSelectMode = () => {
+		selectMode = !selectMode;
+		selectedChatIds = new Set();
+	};
+
+	const toggleChatSelection = (id: string) => {
+		const next = new Set(selectedChatIds);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selectedChatIds = next;
+	};
+
+	const groupIntoFolder = async () => {
+		if (!groupFolderName.trim() || grouping) return;
+		grouping = true;
+		try {
+			const folder = await createNewFolder(localStorage.token, { name: groupFolderName.trim() });
+			if (!folder) return;
+			await Promise.all(
+				[...selectedChatIds].map((chatId) =>
+					updateChatFolderIdById(localStorage.token, chatId, folder.id)
+				)
+			);
+			toast.success($i18n.t('Folder created'));
+			showGroupNameModal = false;
+			groupFolderName = '';
+			selectedChatIds = new Set();
+			selectMode = false;
+			await initFolders();
+			await initChatList();
+		} catch (e) {
+			toast.error($i18n.t('Failed to create folder'));
+		} finally {
+			grouping = false;
+		}
+	};
+
 	let pinnedModels = [];
 
 	let showPinnedModels = false;
@@ -1490,6 +1534,16 @@
 										<CheckIcon className="size-3.5" />
 										<div class="flex items-center">{$i18n.t('Mark all as read')}</div>
 									</button>
+									<hr class="border-gray-50/30 dark:border-gray-800/30 mx-1 my-0.5" />
+									<button
+										class="flex h-[1.6875rem] w-full items-center gap-2 rounded-xl px-2 text-[13px] select-none cursor-pointer hover:bg-gray-50/40 dark:hover:bg-gray-800/40"
+										on:click={() => { showChatsMenu = false; toggleSelectMode(); }}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+											<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+										</svg>
+										<div class="flex items-center">{$i18n.t(selectMode ? 'Cancel Select' : 'Select')}</div>
+									</button>
 								</DropdownMenu>
 							</div>
 						</Dropdown>
@@ -1566,6 +1620,9 @@
 												active={chat.active ?? false}
 												{shiftKey}
 												selected={selectedChatId === chat.id}
+												{selectMode}
+												multiSelected={selectedChatIds.has(chat.id)}
+												on:multitoggle={(e) => toggleChatSelection(e.detail.id)}
 												on:select={() => {
 													selectedChatId = chat.id;
 												}}
@@ -1631,6 +1688,9 @@
 										active={chat.active ?? false}
 										{shiftKey}
 										selected={selectedChatId === chat.id}
+										{selectMode}
+										multiSelected={selectedChatIds.has(chat.id)}
+										on:multitoggle={(e) => toggleChatSelection(e.detail.id)}
 										on:select={() => {
 											selectedChatId = chat.id;
 										}}
@@ -1676,6 +1736,84 @@
 					</div>
 				</SidebarSection>
 			</div>
+
+			<!-- OMA: floating action bar — appears in select mode when chats are checked -->
+			{#if selectMode}
+				<div class="sticky bottom-0 z-20 px-2 pb-2 pt-1">
+					<div class="flex items-center justify-between gap-2 rounded-xl border border-gray-200 bg-white/95 px-3 py-2 shadow-lg backdrop-blur-sm dark:border-white/10 dark:bg-gray-900/95">
+						<span class="text-xs text-gray-500 dark:text-gray-400">
+							{selectedChatIds.size} {$i18n.t('selected')}
+						</span>
+						<div class="flex items-center gap-1.5">
+							<button
+								type="button"
+								on:click={toggleSelectMode}
+								class="rounded-lg px-2.5 py-1 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition"
+							>
+								{$i18n.t('Cancel')}
+							</button>
+							<button
+								type="button"
+								disabled={selectedChatIds.size === 0}
+								on:click={() => { showGroupNameModal = true; groupFolderName = ''; }}
+								class="flex items-center gap-1.5 rounded-lg bg-[#003877] px-2.5 py-1 text-xs text-white transition hover:bg-[#002a63] disabled:cursor-not-allowed disabled:opacity-40 dark:bg-[#73B2F2]/20 dark:text-[#73B2F2] dark:hover:bg-[#73B2F2]/30"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+									<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+								</svg>
+								{$i18n.t('Group into folder')}
+							</button>
+						</div>
+					</div>
+				</div>
+			{/if}
+
+			<!-- OMA: folder name modal -->
+			{#if showGroupNameModal}
+				<div
+					class="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+					on:click|self={() => { showGroupNameModal = false; }}
+					on:keydown={(e) => e.key === 'Escape' && (showGroupNameModal = false)}
+					role="dialog"
+					tabindex="-1"
+					aria-modal="true"
+				>
+					<div class="w-80 rounded-2xl bg-white p-6 shadow-2xl dark:bg-gray-900">
+						<h3 class="mb-3 text-sm font-semibold text-gray-900 dark:text-white">{$i18n.t('New folder name')}</h3>
+						<input
+							type="text"
+							bind:value={groupFolderName}
+							placeholder={$i18n.t('e.g. Plant Reports')}
+							class="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#003877] focus:ring-1 focus:ring-[#003877] dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:border-[#73B2F2] dark:focus:ring-[#73B2F2]"
+							on:keydown={(e) => e.key === 'Enter' && groupIntoFolder()}
+							autofocus
+						/>
+						<div class="mt-4 flex justify-end gap-2">
+							<button
+								type="button"
+								on:click={() => { showGroupNameModal = false; }}
+								class="rounded-lg px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400"
+							>
+								{$i18n.t('Cancel')}
+							</button>
+							<button
+								type="button"
+								disabled={!groupFolderName.trim() || grouping}
+								on:click={groupIntoFolder}
+								class="flex items-center gap-1.5 rounded-lg bg-[#003877] px-3 py-1.5 text-xs text-white hover:bg-[#002a63] disabled:opacity-40 dark:bg-[#73B2F2]/20 dark:text-[#73B2F2]"
+							>
+								{#if grouping}
+									<svg class="size-3 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+									</svg>
+								{/if}
+								{$i18n.t('Create folder')}
+							</button>
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<div class="px-1 pt-1 pb-1.5 sticky bottom-0 z-10 -mt-2 sidebar">
 				<div
