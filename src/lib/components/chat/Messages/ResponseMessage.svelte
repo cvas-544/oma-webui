@@ -728,14 +728,15 @@
 			     CSS keyframe — the Svelte equivalent of the React/Framer-Motion version) -->
 			<div class="relative size-7">
 				{#if !message.done}
-					<div class="oma-avatar-ring absolute inset-0 rounded-2xl"></div>
+					<div class="oma-avatar-ring absolute inset-0 rounded-full"></div>
 				{/if}
 				<div
-					class="absolute inset-[2px] rounded-2xl overflow-hidden bg-white dark:bg-[#191919]"
+					class="absolute inset-[2px] rounded-full overflow-hidden bg-white flex items-center justify-center p-0.5"
 				>
-					<ProfileImage
-						src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-						className={'size-full assistant-message-profile-image'}
+					<img
+						src="/oma-avatar.png"
+						alt="OMA"
+						class="size-full object-contain assistant-message-profile-image"
 					/>
 				</div>
 			</div>
@@ -1760,6 +1761,16 @@
 			transparent
 		);
 		animation: oma-avatar-spin 1.1s linear infinite;
+	}
+
+	:global(.dark .oma-avatar-ring) {
+		background: conic-gradient(
+			from 0deg,
+			white 40%,
+			rgba(255, 255, 255, 0.4) 65%,
+			transparent 85%,
+			transparent
+		) !important;
 	}
 
 	@keyframes oma-avatar-spin {
