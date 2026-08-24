@@ -50,6 +50,11 @@
 	} from '$lib/stores';
 	import { refreshChatList, refreshFolderChatLists } from '$lib/stores/chatList';
 	import { omaChartLibCode } from '$lib/stores/omaChartLib';
+	import { showOmaFeedback } from '$lib/stores/omaFeedback';
+	import { showOmaHelp } from '$lib/stores/omaHelp';
+	import BookOpen from '../icons/BookOpen.svelte';
+	import ChatBubbleOval from '../icons/ChatBubbleOval.svelte';
+	import QuestionMarkCircle from '../icons/QuestionMarkCircle.svelte';
 
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
@@ -675,6 +680,9 @@
 					submitHandler(prompt);
 				}
 			});
+		} else if (type === 'prompt-edit') {
+			// Load prompt into input for editing — do not submit
+			messageInput?.setText(data);
 		}
 	};
 
@@ -4171,7 +4179,7 @@
 								</div>
 							</div>
 						{:else}
-							<div class="flex items-center h-full">
+							<div class="h-full">
 								<Placeholder
 									{history}
 									bind:selectedModels

@@ -28,6 +28,12 @@
 	import MessageInput from './MessageInput.svelte';
 	import FolderPlaceholder from './Placeholder/FolderPlaceholder.svelte';
 	import FolderTitle from './Placeholder/FolderTitle.svelte';
+	import { goto } from '$app/navigation';
+	import { showOmaFeedback } from '$lib/stores/omaFeedback';
+	import { showOmaHelp } from '$lib/stores/omaHelp';
+	import BookOpen from '$lib/components/icons/BookOpen.svelte';
+	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
+	import QuestionMarkCircle from '$lib/components/icons/QuestionMarkCircle.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -81,7 +87,8 @@
 		$selectedFolder.permission !== 'write';
 </script>
 
-<div class="m-auto w-full max-w-[58rem] px-2 @2xl:px-20 translate-y-6 py-24 text-center">
+<div class="flex flex-col h-full w-full max-w-[58rem] mx-auto px-2 @2xl:px-20">
+<div class="flex-1 flex flex-col items-center justify-center text-center translate-y-6 py-16">
 	{#if $temporaryChatEnabled}
 		<Tooltip
 			content={$i18n.t("This chat won't appear in history and your messages will not be saved.")}
@@ -253,21 +260,52 @@
 			<FolderPlaceholder folder={$selectedFolder} />
 		</div>
 	{:else}
-		<div class="mx-auto max-w-2xl mt-2" in:fade={{ duration: 200, delay: 200 }}>
-			<div class="mx-5">
-				<!-- OMA: generic suggestions replaced with O&M quick-start prompts -->
-				<OmaSuggestions on:select={(e) => onSelect(e.detail)} />
-				<!-- OMA: disabled generic Suggestions
-				<Suggestions
-					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
-						models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
-						$config?.default_prompt_suggestions ??
-						[]}
-					inputValue={prompt}
-					{onSelect}
-				/>
-				-->
-			</div>
+		<div class="max-w-lg w-full mx-auto mt-2" in:fade={{ duration: 200, delay: 200 }}>
+			<!-- OMA: generic suggestions replaced with O&M quick-start prompts -->
+			<OmaSuggestions on:select={(e) => onSelect(e.detail)} />
+			<!-- OMA: disabled generic Suggestions
+			<Suggestions
+				suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
+					models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
+					$config?.default_prompt_suggestions ??
+					[]}
+				inputValue={prompt}
+				{onSelect}
+			/>
+			-->
 		</div>
 	{/if}
+
+</div>
+
+<!-- OMA: quick-access pills — bottom of home page, aligned to content column -->
+{#if !$selectedFolder}
+	<div class="pb-5 flex items-center justify-center gap-2">
+		<button
+			type="button"
+			on:click={() => goto('/workspace/prompts')}
+			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+		>
+			<BookOpen className="size-3.5" strokeWidth="1.75" />
+			{$i18n.t('Prompt Library')}
+		</button>
+		<button
+			type="button"
+			on:click={() => showOmaFeedback.set(true)}
+			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+		>
+			<ChatBubbleOval className="size-3.5" strokeWidth="1.75" />
+			{$i18n.t('Feedback')}
+		</button>
+		<button
+			type="button"
+			on:click={() => showOmaHelp.set(true)}
+			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+		>
+			<QuestionMarkCircle className="size-3.5" strokeWidth="1.75" />
+			{$i18n.t('Help')}
+		</button>
+	</div>
+{/if}
+
 </div>
