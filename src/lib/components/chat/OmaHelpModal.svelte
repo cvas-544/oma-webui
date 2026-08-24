@@ -9,7 +9,6 @@
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { showOmaHelp } from '$lib/stores/omaHelp';
-	import OmaScreenCapture from '$lib/components/chat/OmaScreenCapture.svelte';
 
 	const i18n: any = getContext('i18n');
 
@@ -26,8 +25,26 @@
 	let category = '';
 	let message = '';
 	let screenshot: string | null = null;
+	let screenshotName = '';
 	let sent = false;
 	let loading = false;
+	let fileInput: HTMLInputElement;
+
+	// ── File attach ───────────────────────────────────────────────────────────
+	function onFileChange(e: Event) {
+		const file = (e.target as HTMLInputElement).files?.[0];
+		if (!file) return;
+		screenshotName = file.name;
+		const reader = new FileReader();
+		reader.onload = (ev) => { screenshot = ev.target?.result as string; };
+		reader.readAsDataURL(file);
+	}
+
+	function removeScreenshot() {
+		screenshot = null;
+		screenshotName = '';
+		if (fileInput) fileInput.value = '';
+	}
 
 	// ── Submit ────────────────────────────────────────────────────────────────
 	async function handleSubmit(e: SubmitEvent) {
@@ -54,20 +71,13 @@
 		category = '';
 		message = '';
 		screenshot = null;
+		screenshotName = '';
 		sent = false;
 	}
 
 	function close() {
 		showOmaHelp.set(false);
 		reset();
-	}
-
-	function onCapture(e: CustomEvent<string>) {
-		screenshot = e.detail;
-	}
-
-	function removeScreenshot() {
-		screenshot = null;
 	}
 </script>
 
@@ -104,23 +114,24 @@
 					alt="Enerparc solar plant"
 					class="h-full w-full object-cover"
 				/>
-				<!-- Gradient overlay for text legibility -->
-				<div class="absolute inset-0 bg-gradient-to-br from-[#003877]/80 via-[#003877]/40 to-transparent"></div>
+				<!-- Dark overlay for text legibility across the full panel -->
+				<div class="absolute inset-0 bg-[#003877]/65"></div>
+				<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/40"></div>
 
 				<div class="absolute inset-0 flex flex-col justify-between p-7">
 					<div>
-						<p class="mb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/60">
+						<p class="mb-2 text-[0.65rem] font-semibold uppercase tracking-widest text-white/80">
 							O&amp;M AIssistant
 						</p>
 						<h2 class="text-2xl font-bold leading-tight text-white">
 							{$i18n.t('Help &')}<br />{$i18n.t('Support')}
 						</h2>
-						<p class="mt-3 text-xs leading-relaxed text-white/70">
+						<p class="mt-3 text-xs leading-relaxed text-white/90">
 							{$i18n.t("Something not right? Let us know and we'll get back to you.")}
 						</p>
 					</div>
 
-					<p class="text-[0.6rem] text-white/40">
+					<p class="text-[0.6rem] text-white/70">
 						{$i18n.t('Enerparc · O&M AIssistant')}
 					</p>
 				</div>
@@ -172,31 +183,51 @@
 							</div>
 						</div>
 
-						<!-- Screen capture -->
+						<!-- Attach screenshot -->
 						<div class="flex flex-col gap-2">
 							<p class="text-[0.75rem] font-medium text-gray-700 dark:text-gray-300">
 								{$i18n.t('Screenshot')} <span class="font-normal text-gray-400">{$i18n.t('(optional)')}</span>
 							</p>
+							<!-- Hidden file input -->
+							<input
+								bind:this={fileInput}
+								type="file"
+								accept="image/*"
+								class="hidden"
+								on:change={onFileChange}
+							/>
 							{#if screenshot}
-								<div class="relative w-fit">
+								<div class="flex items-center gap-3">
 									<img
 										src={screenshot}
-										alt="Captured screenshot"
-										class="max-h-32 rounded-lg border border-gray-200 object-cover dark:border-white/10"
+										alt="Attached screenshot"
+										class="max-h-24 max-w-[140px] rounded-lg border border-gray-200 object-cover dark:border-white/10"
 									/>
-									<button
-										type="button"
-										on:click={removeScreenshot}
-										class="absolute -right-2 -top-2 flex size-5 items-center justify-center rounded-full bg-gray-800 text-white shadow hover:bg-red-500"
-										aria-label={$i18n.t('Remove screenshot')}
-									>
-										<svg xmlns="http://www.w3.org/2000/svg" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-											<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
-										</svg>
-									</button>
+									<div class="flex flex-col gap-1">
+										<p class="max-w-[140px] truncate text-[0.7rem] text-gray-500 dark:text-gray-400">{screenshotName}</p>
+										<button
+											type="button"
+											on:click={removeScreenshot}
+											class="flex items-center gap-1 text-[0.7rem] text-red-500 hover:text-red-600"
+										>
+											<svg xmlns="http://www.w3.org/2000/svg" class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+												<path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+											</svg>
+											{$i18n.t('Remove')}
+										</button>
+									</div>
 								</div>
 							{:else}
-								<OmaScreenCapture on:capture={onCapture} />
+								<button
+									type="button"
+									on:click={() => fileInput.click()}
+									class="flex items-center gap-2 rounded-lg border border-dashed border-gray-300 px-3 py-2.5 text-xs text-gray-500 transition hover:border-[#003877] hover:text-[#003877] dark:border-white/10 dark:text-gray-400 dark:hover:border-[#73B2F2] dark:hover:text-[#73B2F2]"
+								>
+									<svg xmlns="http://www.w3.org/2000/svg" class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
+										<path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13" />
+									</svg>
+									{$i18n.t('Attach screenshot')}
+								</button>
 							{/if}
 						</div>
 
