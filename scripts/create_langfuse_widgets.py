@@ -125,6 +125,20 @@ WIDGETS: list[dict[str, Any]] = [
     },
 ]
 
+# Pie chart — feedback category distribution (Wrong Data, Not Helpful, etc.)
+FEEDBACK_CATEGORIES_PIE: dict[str, Any] = {
+    "name": "Feedback Category Breakdown",
+    "description": "Distribution of thumbs-down category pills (Wrong Data, Not Helpful, etc.)",
+    "view": "scores-categorical",
+    "metrics": [{"measure": "count", "agg": "count"}],
+    "dimensions": [{"field": "stringValue"}],
+    "filters": [
+        {"column": "name", "type": "string", "operator": "=", "value": "feedback_categories"},
+    ],
+    "chartType": "PIE",
+    "chartConfig": {"type": "PIE"},
+}
+
 # Pie chart — positive vs negative feedback split from user_feedback (±1)
 FEEDBACK_SENTIMENT_PIE: dict[str, Any] = {
     "name": "Feedback Sentiment",
@@ -280,6 +294,8 @@ def main() -> None:
                        help="Create all widgets (7 feedback + 4 failure_tag + 1 histogram + 1 pie)")
     group.add_argument("--sentiment-pie", action="store_true",
                        help="Create the Feedback Sentiment pie chart widget only")
+    group.add_argument("--categories-pie", action="store_true",
+                       help="Create the Feedback Category Breakdown pie chart widget only")
     args = parser.parse_args()
 
     if args.failure_tags:
@@ -288,8 +304,12 @@ def main() -> None:
         to_create = [FAILURE_TAG_HISTOGRAM]
     elif args.sentiment_pie:
         to_create = [FEEDBACK_SENTIMENT_PIE]
+    elif args.categories_pie:
+        to_create = [FEEDBACK_CATEGORIES_PIE]
     elif args.all:
-        to_create = WIDGETS + FAILURE_TAG_WIDGETS + [FAILURE_TAG_HISTOGRAM, FEEDBACK_SENTIMENT_PIE]
+        to_create = WIDGETS + FAILURE_TAG_WIDGETS + [
+            FAILURE_TAG_HISTOGRAM, FEEDBACK_SENTIMENT_PIE, FEEDBACK_CATEGORIES_PIE
+        ]
     else:
         to_create = WIDGETS
 
