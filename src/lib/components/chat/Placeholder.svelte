@@ -280,11 +280,13 @@
 
 <!-- OMA: quick-access pills — bottom of home page, aligned to content column -->
 {#if !$selectedFolder}
-	<div class="pb-5 flex items-center justify-center gap-2">
+	<!-- OMA: Enerparc brand glow blob — sibling of pills, absolute within column -->
+	<div class="oma-home-glow pointer-events-none"></div>
+	<div class="relative pb-5 flex items-center justify-center gap-2 z-10">
 		<button
 			type="button"
 			on:click={() => goto('/workspace/prompts')}
-			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
 			<BookOpen className="size-3.5" strokeWidth="1.75" />
 			{$i18n.t('Prompt Library')}
@@ -292,7 +294,7 @@
 		<button
 			type="button"
 			on:click={() => showOmaFeedback.set(true)}
-			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
 			<ChatBubbleOval className="size-3.5" strokeWidth="1.75" />
 			{$i18n.t('Feedback')}
@@ -300,7 +302,7 @@
 		<button
 			type="button"
 			on:click={() => showOmaHelp.set(true)}
-			class="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/80 px-3.5 py-1.5 text-xs text-gray-500 shadow-sm backdrop-blur-sm transition hover:border-gray-300 hover:text-gray-700 dark:border-white/10 dark:bg-gray-900/80 dark:text-gray-400 dark:hover:border-white/20 dark:hover:text-gray-200"
+			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
 			<QuestionMarkCircle className="size-3.5" strokeWidth="1.75" />
 			{$i18n.t('Help')}
@@ -308,4 +310,35 @@
 	</div>
 {/if}
 
+
 </div>
+
+<style>
+	.oma-home-glow {
+		position: fixed;
+		left: 0;
+		width: 100vw;
+		height: 220px;
+		bottom: -60px;
+		background: radial-gradient(ellipse at calc(50% + 128px) 60%, rgba(0, 56, 119, 1) 0%, rgba(0, 90, 200, 0.85) 20%, rgba(115, 178, 242, 0.75) 38%, rgba(173, 210, 248, 0.3) 54%, transparent 65%);
+		filter: blur(110px);
+		border-radius: 50%;
+		z-index: 0;
+	}
+	.oma-home-glow::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: 50%;
+		background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+		background-size: 180px 180px;
+		opacity: 0.22;
+		mix-blend-mode: overlay;
+	}
+	:global(.dark) .oma-home-glow {
+		background: radial-gradient(ellipse at calc(50% + 128px) 65%, rgba(115, 178, 242, 0.85) 0%, rgba(0, 100, 200, 0.5) 40%, rgba(0, 56, 119, 0.2) 60%, transparent 78%);
+	}
+	:global(.dark) .oma-home-glow::after {
+		opacity: 0.18;
+	}
+</style>
