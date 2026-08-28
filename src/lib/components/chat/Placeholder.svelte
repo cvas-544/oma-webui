@@ -318,12 +318,31 @@
 		position: fixed;
 		left: 0;
 		width: 100vw;
-		height: 220px;
-		bottom: -60px;
-		background: radial-gradient(ellipse at calc(50% + 128px) 60%, rgba(0, 56, 119, 1) 0%, rgba(0, 90, 200, 0.85) 20%, rgba(115, 178, 242, 0.75) 38%, rgba(173, 210, 248, 0.3) 54%, transparent 65%);
+		height: 300px;
+		bottom: -90px;
+		background: radial-gradient(ellipse at calc(50% + 128px) 60%, rgba(0, 40, 100, 1) 0%, rgba(0, 70, 170, 0.95) 18%, rgba(0, 90, 200, 0.88) 32%, rgba(115, 178, 242, 0.65) 50%, rgba(173, 210, 248, 0.25) 65%, transparent 78%);
 		filter: blur(110px);
 		border-radius: 50%;
 		z-index: 0;
+		animation: oma-glow-breathe 5s ease-in-out infinite;
+		transform-origin: center center;
+	}
+	@keyframes oma-glow-breathe {
+		0%, 100% {
+			transform: scale(1) scaleX(1);
+			border-radius: 50%;
+			opacity: 1;
+		}
+		40% {
+			transform: scale(1.08) scaleX(1.12);
+			border-radius: 55% 45% 52% 48% / 50% 55% 45% 50%;
+			opacity: 0.82;
+		}
+		70% {
+			transform: scale(0.82) scaleX(0.88);
+			border-radius: 45% 55% 48% 52% / 52% 45% 55% 48%;
+			opacity: 0.6;
+		}
 	}
 	.oma-home-glow::after {
 		content: '';
