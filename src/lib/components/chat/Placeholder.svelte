@@ -30,7 +30,9 @@
 	import FolderTitle from './Placeholder/FolderTitle.svelte';
 	import { goto } from '$app/navigation';
 	import { showOmaFeedback } from '$lib/stores/omaFeedback';
+
 	import { showOmaHelp } from '$lib/stores/omaHelp';
+	import { showOmaPromptLibrary } from '$lib/stores/omaPromptLibrary';
 	import BookOpen from '$lib/components/icons/BookOpen.svelte';
 	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
 	import QuestionMarkCircle from '$lib/components/icons/QuestionMarkCircle.svelte';
@@ -285,7 +287,7 @@
 	<div class="relative pb-5 flex items-center justify-center gap-2 z-10">
 		<button
 			type="button"
-			on:click={() => goto('/workspace/prompts')}
+			on:click={() => showOmaPromptLibrary.set(true)}
 			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
 			<BookOpen className="size-3.5" strokeWidth="1.75" />

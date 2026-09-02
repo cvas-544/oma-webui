@@ -78,6 +78,7 @@
 	import WeeklySurvey from '$lib/components/chat/WeeklySurvey.svelte';
 	import OmaFeedbackModal from '$lib/components/chat/OmaFeedbackModal.svelte';
 	import OmaHelpModal from '$lib/components/chat/OmaHelpModal.svelte';
+	import OmaPromptLibrary from '$lib/components/chat/OmaPromptLibrary.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getOutputText } from '$lib/components/chat/Messages/structuredOutput';
 	import { getUserSettings } from '$lib/apis/users';
@@ -1348,6 +1349,9 @@
 
 <!-- OMA: help & support ticket modal (opened from quick-settings menu) -->
 <OmaHelpModal />
+
+<!-- OMA: prompt library modal (opened from home page pill button) -->
+<OmaPromptLibrary />
 
 <Toaster
 	theme={$theme.includes('dark')

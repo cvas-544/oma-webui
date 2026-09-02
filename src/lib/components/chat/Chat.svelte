@@ -52,6 +52,7 @@
 	import { omaChartLibCode } from '$lib/stores/omaChartLib';
 	import { showOmaFeedback } from '$lib/stores/omaFeedback';
 	import { showOmaHelp } from '$lib/stores/omaHelp';
+	import { omaPromptInsert } from '$lib/stores/omaPromptLibrary';
 	import BookOpen from '../icons/BookOpen.svelte';
 	import ChatBubbleOval from '../icons/ChatBubbleOval.svelte';
 	import QuestionMarkCircle from '../icons/QuestionMarkCircle.svelte';
@@ -401,6 +402,19 @@
 	let chatFiles = [];
 	let files = [];
 	let params = {};
+
+	// Prompt Library: when a prompt is selected, insert it into the input.
+	omaPromptInsert.subscribe(async (text) => {
+		if (text) {
+			omaPromptInsert.set(null);
+			await tick();
+			if (messageInput) {
+				messageInput.setText(text);
+			} else {
+				prompt = text;
+			}
+		}
+	});
 	let chatVariables = {};
 	let showChatVariablesModal = false;
 	let loadedChatIdProp = '';
