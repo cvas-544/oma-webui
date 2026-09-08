@@ -33,7 +33,9 @@
 
 	import { showOmaHelp } from '$lib/stores/omaHelp';
 	import { showOmaPromptLibrary } from '$lib/stores/omaPromptLibrary';
+	import { showOmaKnowledgeBase } from '$lib/stores/omaKnowledgeBase';
 	import BookOpen from '$lib/components/icons/BookOpen.svelte';
+	import Database from '$lib/components/icons/Database.svelte';
 	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
 	import QuestionMarkCircle from '$lib/components/icons/QuestionMarkCircle.svelte';
 
@@ -292,6 +294,14 @@
 		>
 			<BookOpen className="size-3.5" strokeWidth="1.75" />
 			{$i18n.t('Prompt Library')}
+		</button>
+		<button
+			type="button"
+			on:click={() => showOmaKnowledgeBase.set(true)}
+			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
+		>
+			<Database className="size-3.5 shrink-0" strokeWidth="1.75" />
+			{$i18n.t('Knowledge Base')}
 		</button>
 		<button
 			type="button"
