@@ -284,6 +284,15 @@
 
 <!-- OMA: quick-access pills — bottom of home page, aligned to content column -->
 {#if !$selectedFolder}
+	<!-- OMA: dot pattern — behind glow blob -->
+	<svg aria-hidden="true" class="oma-dot-pattern pointer-events-none">
+		<defs>
+			<pattern id="oma-dot-pattern" width="20" height="20" patternUnits="userSpaceOnUse" x="0" y="0">
+				<circle cx="1" cy="1" r="1" />
+			</pattern>
+		</defs>
+		<rect width="100%" height="100%" stroke-width="0" fill="url(#oma-dot-pattern)" />
+	</svg>
 	<!-- OMA: Enerparc brand glow blob — sibling of pills, absolute within column -->
 	<div class="oma-home-glow pointer-events-none"></div>
 	<div class="relative pb-5 flex items-center justify-center gap-2 z-10">
@@ -326,6 +335,19 @@
 </div>
 
 <style>
+	.oma-dot-pattern {
+		position: fixed;
+		inset: 0;
+		width: 100vw;
+		height: 100vh;
+		fill: rgb(100 116 139 / 0.35);
+		z-index: -1;
+		-webkit-mask-image: radial-gradient(ellipse 90% 55% at 50% 100%, white 10%, transparent 75%);
+		mask-image: radial-gradient(ellipse 90% 55% at 50% 100%, white 10%, transparent 75%);
+	}
+	:global(.dark) .oma-dot-pattern {
+		fill: rgb(148 163 184 / 0.18);
+	}
 	.oma-home-glow {
 		position: fixed;
 		left: 0;
