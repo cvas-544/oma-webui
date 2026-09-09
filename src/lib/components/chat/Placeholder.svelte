@@ -23,6 +23,7 @@
 
 	import Suggestions from './Suggestions.svelte';
 	import OmaSuggestions from './OmaSuggestions.svelte';
+	import OmaRotatingHint from './OmaRotatingHint.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
 	import MessageInput from './MessageInput.svelte';
@@ -265,20 +266,14 @@
 			<FolderPlaceholder folder={$selectedFolder} />
 		</div>
 	{:else}
-		<div class="max-w-lg w-full mx-auto mt-2" data-tour="suggestions" in:fade={{ duration: 200, delay: 200 }}>
-			<!-- OMA: generic suggestions replaced with O&M quick-start prompts -->
-			<OmaSuggestions on:select={(e) => onSelect(e.detail)} />
-			<!-- OMA: disabled generic Suggestions
-			<Suggestions
-				suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
-					models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
-					$config?.default_prompt_suggestions ??
-					[]}
-				inputValue={prompt}
-				{onSelect}
-			/>
-			-->
+		<div class="w-full mx-auto mt-3" in:fade={{ duration: 200, delay: 200 }}>
+			<OmaRotatingHint />
 		</div>
+		<!-- OMA: suggestions hidden — not implemented yet
+		<div class="max-w-lg w-full mx-auto mt-2" data-tour="suggestions" in:fade={{ duration: 200, delay: 200 }}>
+			<OmaSuggestions on:select={(e) => onSelect(e.detail)} />
+		</div>
+		-->
 	{/if}
 
 </div>
