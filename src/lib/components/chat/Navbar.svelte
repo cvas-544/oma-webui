@@ -121,7 +121,7 @@
 					{/if}
 				</div>
 
-				<div class="self-start flex flex-none items-center py-1 pr-0.5">
+				<div class="self-start flex flex-none items-center py-1 pr-0.5" data-tour="quick-settings">
 					<QuickSettingsMenu />
 				</div>
 			</div>

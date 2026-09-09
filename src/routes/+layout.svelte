@@ -80,6 +80,7 @@
 	import OmaHelpModal from '$lib/components/chat/OmaHelpModal.svelte';
 	import OmaPromptLibrary from '$lib/components/chat/OmaPromptLibrary.svelte';
 	import OmaKnowledgeBase from '$lib/components/chat/OmaKnowledgeBase.svelte';
+	import OmaTourGuide from '$lib/components/chat/OmaTourGuide.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getOutputText } from '$lib/components/chat/Messages/structuredOutput';
 	import { getUserSettings } from '$lib/apis/users';
@@ -1356,6 +1357,9 @@
 
 <!-- OMA: knowledge base modal (opened from home page pill button) -->
 <OmaKnowledgeBase />
+
+<!-- OMA: quick tour guide (opened from Tour pill on home page) -->
+<OmaTourGuide />
 
 <Toaster
 	theme={$theme.includes('dark')

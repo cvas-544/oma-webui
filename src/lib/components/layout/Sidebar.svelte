@@ -1375,6 +1375,7 @@
 				{/if}
 
 				{#if $config?.features?.enable_folders && ($user?.role === 'admin' || ($user?.permissions?.features?.folders ?? true))}
+					<div data-tour="sidebar-folders">
 					<SidebarSection
 						id="sidebar-folders"
 						bind:open={showFolders}
@@ -1426,9 +1427,11 @@
 							}}
 						/>
 					</SidebarSection>
+					</div>
 				{/if}
 
 				{#if $artifacts.length > 0}
+					<div data-tour="sidebar-artifacts">
 					<SidebarSection
 						id="sidebar-artifacts"
 						bind:open={showArtifacts}
@@ -1438,6 +1441,7 @@
 					>
 						<ArtifactsPanel />
 					</SidebarSection>
+					</div>
 				{/if}
 
 				<SidebarSection
@@ -1828,6 +1832,7 @@
 						>
 							<button
 								type="button"
+								data-tour="sidebar-profile"
 								class=" flex items-center rounded-xl py-1.5 px-1.5 w-full hover:bg-gray-50 dark:hover:bg-gray-900 transition"
 								aria-label={$i18n.t('User menu')}
 							>

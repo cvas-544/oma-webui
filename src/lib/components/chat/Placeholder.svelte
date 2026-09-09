@@ -34,6 +34,7 @@
 	import { showOmaHelp } from '$lib/stores/omaHelp';
 	import { showOmaPromptLibrary } from '$lib/stores/omaPromptLibrary';
 	import { showOmaKnowledgeBase } from '$lib/stores/omaKnowledgeBase';
+	import { showOmaTour } from '$lib/stores/omaTour';
 	import BookOpen from '$lib/components/icons/BookOpen.svelte';
 	import Database from '$lib/components/icons/Database.svelte';
 	import ChatBubbleOval from '$lib/components/icons/ChatBubbleOval.svelte';
@@ -223,7 +224,7 @@
 				</div>
 			{/if}
 
-			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
+			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}" data-tour="chat-input">
 				{#if !($selectedFolder && folderReadOnly)}
 					<MessageInput
 						bind:this={messageInput}
@@ -264,7 +265,7 @@
 			<FolderPlaceholder folder={$selectedFolder} />
 		</div>
 	{:else}
-		<div class="max-w-lg w-full mx-auto mt-2" in:fade={{ duration: 200, delay: 200 }}>
+		<div class="max-w-lg w-full mx-auto mt-2" data-tour="suggestions" in:fade={{ duration: 200, delay: 200 }}>
 			<!-- OMA: generic suggestions replaced with O&M quick-start prompts -->
 			<OmaSuggestions on:select={(e) => onSelect(e.detail)} />
 			<!-- OMA: disabled generic Suggestions
@@ -284,20 +285,23 @@
 
 <!-- OMA: quick-access pills — bottom of home page, aligned to content column -->
 {#if !$selectedFolder}
-	<!-- OMA: dot pattern — behind glow blob -->
-	<svg aria-hidden="true" class="oma-dot-pattern pointer-events-none">
-		<defs>
-			<pattern id="oma-dot-pattern" width="20" height="20" patternUnits="userSpaceOnUse" x="0" y="0">
-				<circle cx="1" cy="1" r="1" />
-			</pattern>
-		</defs>
-		<rect width="100%" height="100%" stroke-width="0" fill="url(#oma-dot-pattern)" />
-	</svg>
-	<!-- OMA: Enerparc brand glow blob — sibling of pills, absolute within column -->
-	<div class="oma-home-glow pointer-events-none"></div>
+	{#if !$showOmaTour}
+		<!-- OMA: dot pattern — behind glow blob (hidden during tour) -->
+		<svg aria-hidden="true" class="oma-dot-pattern pointer-events-none">
+			<defs>
+				<pattern id="oma-dot-pattern" width="20" height="20" patternUnits="userSpaceOnUse" x="0" y="0">
+					<circle cx="1" cy="1" r="1" />
+				</pattern>
+			</defs>
+			<rect width="100%" height="100%" stroke-width="0" fill="url(#oma-dot-pattern)" />
+		</svg>
+		<!-- OMA: Enerparc brand glow blob (hidden during tour) -->
+		<div class="oma-home-glow pointer-events-none"></div>
+	{/if}
 	<div class="relative pb-5 flex items-center justify-center gap-2 z-10">
 		<button
 			type="button"
+			data-tour="prompt-library"
 			on:click={() => showOmaPromptLibrary.set(true)}
 			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
@@ -306,6 +310,7 @@
 		</button>
 		<button
 			type="button"
+			data-tour="knowledge-base"
 			on:click={() => showOmaKnowledgeBase.set(true)}
 			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
@@ -314,6 +319,7 @@
 		</button>
 		<button
 			type="button"
+			data-tour="feedback"
 			on:click={() => showOmaFeedback.set(true)}
 			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
@@ -322,11 +328,11 @@
 		</button>
 		<button
 			type="button"
-			on:click={() => showOmaHelp.set(true)}
+			on:click={() => showOmaTour.set(true)}
 			class="flex items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3.5 py-1.5 text-xs text-gray-600 backdrop-blur-sm transition hover:bg-white/35 hover:text-gray-800 dark:border-white/15 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-100"
 		>
 			<QuestionMarkCircle className="size-3.5" strokeWidth="1.75" />
-			{$i18n.t('Help')}
+			{$i18n.t('Tour')}
 		</button>
 	</div>
 {/if}
