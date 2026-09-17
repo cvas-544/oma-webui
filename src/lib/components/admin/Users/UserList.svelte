@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 	import { adminUserCount, config, user } from '$lib/stores';
-	import { getContext, onDestroy } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 
 	import dayjs from 'dayjs';
 	import relativeTime from 'dayjs/plugin/relativeTime';
@@ -20,9 +20,9 @@
 	import Trash from '$lib/components/icons/Trash.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
-	import EditUserModal from '$lib/components/admin/Users/UserList/EditUserModal.svelte';
+	import EditOmaUserModal from '$lib/components/admin/Users/AddUser/EditOmaUserModal.svelte';
 	import UserChatsModal from '$lib/components/admin/Users/UserList/UserChatsModal.svelte';
-	import AddUserModal from '$lib/components/admin/Users/UserList/AddUserModal.svelte';
+	import AddOmaUserModal from '$lib/components/admin/Users/AddUser/AddOmaUserModal.svelte';
 
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
@@ -55,6 +55,37 @@
 	let showUserChatsModal = false;
 	let showEditUserModal = false;
 	let showUserPreviewModal = false;
+
+	// OMA static data for the Add User modal
+	// Plants: loaded from OMA backend (or fallback empty). The backend exposes
+	// GET /api/v1/oma/plants which reads the rbac-mvp_plants.csv.
+	// Models and KBs are defined here as constants until a backend endpoint exists.
+	let omaPlants: { plant_id: string; name: string }[] = [];
+	const omaModels = [
+		{ id: 'oma-assistant-staging', name: 'OMA Assistant (Staging)' },
+		{ id: 'oma-assistant-prod', name: 'OMA Assistant (Production)' },
+		{ id: 'oma-assistant-vasu', name: 'OMA Assistant (Vasu dev)' }
+	];
+	const omaKnowledgeBases = [
+		{ id: 'kb-enerparc-general', name: 'Enerparc General' },
+		{ id: 'kb-betriebsrichtlinien', name: 'Betriebsrichtlinien' },
+		{ id: 'kb-vendor-docs', name: 'Vendor Documentation' }
+	];
+
+	const loadOmaPlants = async () => {
+		try {
+			const res = await fetch('/api/v1/oma/plants', {
+				headers: { authorization: `Bearer ${localStorage.token}` }
+			});
+			if (res.ok) {
+				const data = await res.json();
+				omaPlants = data?.plants ?? data ?? [];
+			}
+		} catch {
+			// Backend endpoint not yet deployed — leave empty, admin can still save
+			omaPlants = [];
+		}
+	};
 
 	const deleteUserHandler = async (id) => {
 		const res = await deleteUserById(localStorage.token, id).catch((error) => {
@@ -131,6 +162,11 @@
 	onDestroy(() => {
 		clearTimeout(searchDebounceTimer);
 	});
+
+	// Load OMA plant list once on mount
+	onMount(() => {
+		loadOmaPlants();
+	});
 </script>
 
 <ConfirmDialog
@@ -140,17 +176,23 @@
 	}}
 />
 
-<AddUserModal
+<AddOmaUserModal
 	bind:show={showAddUserModal}
+	allPlants={omaPlants}
+	allModels={omaModels}
+	allKnowledgeBases={omaKnowledgeBases}
 	on:save={async () => {
 		getUserList();
 	}}
 />
 
-<EditUserModal
+<EditOmaUserModal
 	bind:show={showEditUserModal}
 	{selectedUser}
 	sessionUser={$user}
+	allPlants={omaPlants}
+	allModels={omaModels}
+	allKnowledgeBases={omaKnowledgeBases}
 	on:save={async () => {
 		getUserList();
 	}}
